@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Графика NEON//SURVIVORS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
+<style>
+  /* Макет: одна колонка, каждый стиль — полоса тайлов (одни и те же 7 героев) + сцена в настоящем игровом масштабе */
+  :root {
+    --bg: #05060f;          /* фон игры */
+    --panel: #0a0e1f;
+    --line: #1c2540;
+    --fg: #e2e8f0;
+    --muted: #8a96b3;
+    --accent: #22d3ee;      /* неон-циан игры */
+    --gold: #fbbf24;
+    --display: "Russo One", "Arial Black", system-ui, sans-serif;
+    --body: "Exo 2", "Segoe UI", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  html { background: var(--bg); }
+  body { margin: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; }
+  h1 { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 5vw, 40px); line-height: 1.1; margin: 0 0 10px; text-wrap: balance; }
+  h1 b { color: var(--accent); font-weight: 400; text-shadow: 0 0 18px rgba(34,211,238,.55); }
+  .lead { color: var(--muted); max-width: 68ch; margin: 0; }
+  .lead strong { color: var(--fg); font-weight: 600; }
+  .style { margin-top: 36px; border-top: 1px solid var(--line); padding-top: 22px; display: grid; gap: 14px; }
+  .style-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+  .style h2 { font-family: var(--display); font-weight: 400; font-size: 22px; margin: 0; letter-spacing: .02em; }
+  .tag { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; }
+  .tag.now { color: #94a3b8; }
+  .tag.easy { color: #34d399; border-color: rgba(52,211,153,.35); }
+  .tag.art { color: var(--gold); border-color: rgba(251,191,36,.35); }
+  .style p { margin: 0; color: var(--muted); max-width: 72ch; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 10px; }
+  .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 8px 10px; display: grid; gap: 4px; justify-items: center; min-width: 0; }
+  .tile canvas { width: 100%; max-width: 132px; aspect-ratio: 1; display: block; }
+  .tile .nm { font-family: var(--display); font-size: 13px; letter-spacing: .02em; }
+  .tile .sub { font-size: 11px; color: var(--muted); }
+  .scene-box { display: grid; gap: 6px; }
+  .scene-box canvas { width: 100%; height: 180px; display: block; border-radius: 8px; border: 1px solid var(--line); background: #060814; }
+  .scene-cap { font-size: 12px; color: var(--muted); }
+  .links { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .link { display: grid; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; color: var(--fg); text-decoration: none; min-width: 0; }
+  .link:hover, .link:focus-visible { border-color: var(--gold); outline: none; }
+  .link b { font-family: var(--display); font-weight: 400; color: var(--gold); }
+  .link span { font-size: 13px; color: var(--muted); }
+  .note { margin-top: 36px; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <h1>Как могут выглядеть <b>враги и корабли</b></h1>
+  <p class="lead">Одни и те же семеро героев в 11 вариантах: три корабля пилотов, три врага и босс Нео-Терры. <strong>Первые десять рисуются кодом прямо сейчас</strong>, последний сделан из готовых картинок. Тайлы увеличены примерно в 2,5 раза, а полоса под каждым стилем показывает настоящий размер в бою.</p>
+
+  <section class="style" data-style="now">
+    <div class="style-head"><h2>Сейчас</h2><span class="tag now">как в игре</span></div>
+    <p>Простые неоновые контуры. У всех пилотов один и тот же кораблик, отличается только цвет. Почти нет анимации.</p>
+    <div class="tiles"></div>
+    <div class="scene-box"><canvas class="scene"></canvas><div class="scene-cap">В бою, настоящий размер</div></div>
+  </section>
+
+  <section class="style" data-style="neon">
+    <div class="style-head"><h2>Неон 2.0</h2><span class="tag easy">могу сделать сам</span></div>
+    <p>Тот же неоновый стиль, только богаче. У каждого пилота свой корабль: штурмовик, тяжёлый с ракетными подвесами, тонкий стелс. Враги ожили: крутятся винты дронов, бегут лапки краулера, вращается шипастое кольцо голема. Пламя двигателей и ядра пульсируют.</p>
+    <div class="tiles"></div>
+    <div class="scene-box"><canvas class="scene"></canvas><div class="scene-cap">В бою, настоящий размер</div></div>
+  </section>
+
+  <section class="style" data-style="volume">
+    <div class="style-head"><h2>Объёмный</h2><span class="tag easy">могу сделать сам</span></div>
+    <p>Ближе к нарисованной графике: металлические корпуса с бликами, стекло кабин, тени под объектами, «живые» панцири у тварей. Тоже рисуется кодом, но смотрится как иллюстрация. Неоновое свечение остаётся только у двигателей и ядер.</p>
+    <div class="tiles"></div>
+    <div class="scene-box"><canvas class="scene"></canvas><div class="scene-cap">В бою, настоящий размер</div></div>
+  </section>
+
+  <section class="style" data-style="pixel">
+    <div class="style-head"><h2>Пиксель-арт</h2><span class="tag easy">могу сделать сам</span></div>
+    <p>Ретро-стиль, как в аркадах 90-х. Анимация по кадрам: мигают винты, переставляются лапки, мерцает пламя. Хорошо читается в мелком размере, но это смена всего облика игры, вплоть до шрифтов и меню.</p>
+    <div class="tiles"></div>
+    <div class="scene-box"><canvas class="scene"></canvas><div class="scene-cap">В бою, настоящий размер</div></div>
+  </section>
+
+  <section class="style" data-style="cartoon">
+    <div class="style-head"><h2>Мультяшный</h2><span class="tag easy">могу сделать сам</span></div>
+    <p>Толстый контур, плоские яркие цвета, простая тень, большие глаза у тварей. Похоже на набор Kenney, только весь в нашей палитре и с нашими героями, включая ползучих тварей Улья.</p>
+    <div class="tiles"></div>
+    <div class="scene-box"><canvas class="scene"></canvas><div class="scene-cap">В бою, настоящий размер</div></div>
+  </section>
+
+  <section class="style" data-style="lowpoly">
+    <div class="style-head"><h2>Low-poly</h2><span class="tag easy">могу сделать сам</span></div>
+    <p>Каждый герой собран из гранёных треугольников, которые освещены по-разному, как 3D-модель с плоским светом. Неоновое свечение двигателей и ядер остаётся.</p>
+    <div class="tiles"></div>
+    <div class="scene-box"><canvas class="scene"></canvas><div class="scene-cap">В бою, настоящий размер</div></div>
+  </section>
+
+  <section class="style" data-style="holo">
+    <div class="style-head"><h2>Голограмма</h2><span class="tag easy">могу сделать сам</span></div>
+    <p>Полупрозрачные голубые силуэты со сканлайнами, цветовым двоением по краям и мерцанием. Иногда картинка «рвётся» глитчем. Сильнее всего подходит к киберпанку, но в толпе врагов может сливаться.</p>
+    <div class="tiles"></div>
+    <div class="scene-box"><canvas class="scene"></canvas><div class="scene-cap">В бою, настоящий размер</div></div>
+  </section>
+
+  <section class="style" data-style="silhouette">
+    <div class="style-head"><h2>Силуэты с подсветкой</h2><span class="tag easy">могу сделать сам</span></div>
+    <p>Тёмные силуэты с цветной обводкой по краю, как от прожектора. Светятся только глаза, ядра и двигатели. Мрачно и атмосферно, особенно для Улья.</p>
+    <div class="tiles"></div>
+    <div class="scene-box"><canvas class="scene"></canvas><div class="scene-cap">В бою, настоящий размер</div></div>
+  </section>
+
+  <section class="style" data-style="blueprint">
+    <div class="style-head"><h2>Чертёж</h2><span class="tag easy">могу сделать сам</span></div>
+    <p>Инженерная схема: тонкие белые линии на синей кальке, осевые линии, пунктиром показан настоящий хитбокс из игры с размером в пикселях. Необычно, но в бою читается хуже всех.</p>
+    <div class="tiles"></div>
+    <div class="scene-box"><canvas class="scene"></canvas><div class="scene-cap">В бою, настоящий размер</div></div>
+  </section>
+
+  <section class="style" data-style="three">
+    <div class="style-head"><h2>Настоящее 3D</h2><span class="tag art">могу, но дольше</span></div>
+    <p>Объёмные модели с металлом, стеклом и освещением, собранные из 3D-примитивов и отрисованные библиотекой three.js. В игре они будут заранее «сфотографированы» в картинки под разными углами, чтобы сотни врагов не тормозили. Работы заметно больше, чем у остальных стилей.</p>
+    <div class="tiles"></div>
+    <div class="scene-box"><canvas class="scene"></canvas><div class="scene-cap">В бою, настоящий размер</div></div>
+  </section>
+
+  <section class="style" data-style="kenney">
+    <div class="style-head"><h2>Готовые картинки</h2><span class="tag art">нужен арт</span></div>
+    <p>Настоящая нарисованная графика. Для примера взят бесплатный набор Kenney «Space Shooter» (лицензия CC0: можно использовать где угодно, даже в платной игре). Встроить картинки в игру просто. Сложность в другом: нужно найти 30+ спрайтов в одном стиле и с видом сверху. В этом наборе нет, например, ползающих тварей и гнёзд для Улья, а неоновое свечение игры с ним не сочетается.</p>
+    <div class="tiles"></div>
+    <div class="scene-box"><canvas class="scene"></canvas><div class="scene-cap">В бою, настоящий размер</div></div>
+    <div class="links">
+      <a class="link" href="https://kenney.nl/assets/space-shooter-remastered" target="_blank" rel="noopener"><b>Kenney · Space Shooter Remastered</b><span>Набор, из которого взяты картинки выше. Корабли, враги, снаряды в мультяшном стиле.</span></a>
+      <a class="link" href="https://kenney.nl/assets/space-shooter-extension" target="_blank" rel="noopener"><b>Kenney · Space Shooter Extension</b><span>Дополнение к прошлому: станции, крупные корабли, детали для боссов.</span></a>
+      <a class="link" href="https://opengameart.org/art-search?keys=top+down+spaceship" target="_blank" rel="noopener"><b>OpenGameArt · поиск</b><span>Тысячи бесплатных спрайтов кораблей «вид сверху», разные лицензии и стили.</span></a>
+    </div>
+  </section>
+
+  <p class="note">Спрайты в разделе «Готовые картинки» — Kenney Vleugels (kenney.nl), лицензия CC0. Подробности и рекомендация — в <a href="https://github.com/korolevasofia0408-arch/neon-survivors/blob/main/docs/art-styles.md" style="color:var(--accent)">документе со стилями</a>.</p>
+  <p class="note">Каждый вариант можно применить частично: например, корабли пилотов и боссов сделать объёмными, а мелких врагов оставить в «Неоне 2.0».</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  const TAU = Math.PI * 2;
+  let NOSHADOW = false; // силуэты рисуются из «Объёмного» стиля без теней и свечения
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- цвета ----------
+  const hex = (c) => { const n = parseInt(c.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+  const rgba = (c, a) => { const [r, g, b] = hex(c); return `rgba(${r},${g},${b},${a})`; };
+  const mix = (c, d, k) => { const a = hex(c), b = hex(d); return "#" + a.map((v, i) => Math.round(v + (b[i] - v) * k).toString(16).padStart(2, "0")).join(""); };
+  const light = (c, k = 0.45) => mix(c, "#ffffff", k);
+  const dark = (c, k = 0.5) => mix(c, "#000000", k);
+
+  const HEROES = [
+    { id: "kai", kind: "ship", hull: "assault", name: "Кай", sub: "штурмовик", color: "#22d3ee", r: 18 },
+    { id: "titan", kind: "ship", hull: "heavy", name: "Титан", sub: "тяжёлый", color: "#fb923c", r: 18 },
+    { id: "ghost", kind: "ship", hull: "stealth", name: "Призрак", sub: "стелс", color: "#34d399", r: 18 },
+    { id: "drone", kind: "drone", name: "Дрон", sub: "враг", color: "#f43f5e", r: 12 },
+    { id: "crawler", kind: "crawler", name: "Краулер", sub: "враг", color: "#a3e635", r: 13 },
+    { id: "brute", kind: "brute", name: "Голем", sub: "враг", color: "#c084fc", r: 30 },
+    { id: "boss", kind: "boss", name: "Дредноут", sub: "босс", color: "#f59e0b", r: 58 },
+  ];
+  const TILE_R = { ship: 40, drone: 36, crawler: 38, brute: 40, boss: 46 };
+
+  const glow = (g, c, b) => { g.shadowColor = c; g.shadowBlur = b; };
+  const noGlow = (g) => { g.shadowBlur = 0; };
+  const poly = (g, n, r, rot = 0) => { g.beginPath(); for (let i = 0; i < n; i++) { const a = rot + (i / n) * TAU; i ? g.lineTo(Math.cos(a) * r, Math.sin(a) * r) : g.moveTo(Math.cos(a) * r, Math.sin(a) * r); } g.closePath(); };
+  const pts = (g, list, r) => { g.beginPath(); list.forEach(([x, y], i) => (i ? g.lineTo(x * r, y * r) : g.moveTo(x * r, y * r))); g.closePath(); };
+  const mirror = (half) => [...half, ...half.slice().reverse().map(([x, y]) => [x, -y])];
+
+  // Корпуса кораблей (нос вправо, единицы — доли радиуса)
+  const HULLS = {
+    assault: mirror([[1.15, 0], [0.45, -0.2], [-0.15, -0.34], [-0.6, -0.95], [-0.82, -0.9], [-0.55, -0.3], [-0.86, -0.22]]).slice(0, -1),
+    heavy: mirror([[0.95, -0.18], [0.6, -0.45], [0.1, -0.5], [-0.1, -0.95], [-0.7, -0.95], [-0.86, -0.55]]),
+    stealth: mirror([[1.3, 0], [0.25, -0.09], [-0.35, -0.12], [-0.05, -0.86], [-0.22, -0.9], [-0.72, -0.16], [-0.96, -0.07]]).slice(0, -1),
+  };
+  const ENGINES = { assault: [[-0.86, -0.13], [-0.86, 0.13]], heavy: [[-0.86, -0.3], [-0.86, 0.3], [-0.72, -0.78], [-0.72, 0.78]], stealth: [[-0.96, 0]] };
+
+  // ================= СЕЙЧАС (код из игры) =================
+  const NOW = {
+    ship(g, h, r) {
+      const color = h.color;
+      glow(g, color, 14); g.fillStyle = "#070b16"; g.strokeStyle = color; g.lineWidth = 2;
+      for (const s of [-1, 1]) { g.beginPath(); g.roundRect(-r * 0.55, s * r * 0.62 - r * 0.25, r * 0.9, r * 0.5, 3); g.fill(); g.stroke(); }
+      pts(g, [[1, 0], [0.35, -0.62], [-0.7, -0.5], [-0.9, 0], [-0.7, 0.5], [0.35, 0.62]], r); g.fill(); g.stroke();
+      g.fillStyle = color; pts(g, [[0.8, 0], [0.3, -0.3], [0.1, -0.22], [0.1, 0.22], [0.3, 0.3]], r); g.fill();
+      g.beginPath(); g.arc(-r * 0.3, 0, r * 0.2, 0, TAU); g.fill();
+      noGlow(g); g.fillStyle = "#fff"; g.beginPath(); g.arc(-r * 0.3, 0, r * 0.09, 0, TAU); g.fill(); g.fillRect(r * 0.35, -r * 0.06, r * 0.3, r * 0.12);
+    },
+    drone(g, h, r) {
+      const c = h.color;
+      glow(g, c, 8); g.fillStyle = "#1a0610"; g.strokeStyle = c; g.lineWidth = 2;
+      pts(g, [[0, -1], [1, 0], [0, 1], [-1, 0]], r); g.fill(); g.stroke();
+      g.lineWidth = 1.5; for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { g.beginPath(); g.arc(sx * r * 0.78, sy * r * 0.78, r * 0.32, 0, TAU); g.stroke(); }
+      g.fillStyle = c; g.beginPath(); g.arc(0, 0, r * 0.32, 0, TAU); g.fill();
+      noGlow(g); g.fillStyle = "#fff"; g.beginPath(); g.arc(0, 0, r * 0.13, 0, TAU); g.fill();
+    },
+    crawler(g, h, r) {
+      const c = h.color;
+      glow(g, c, 8); g.strokeStyle = c; g.lineWidth = 1.8;
+      for (let i = 0; i < 6; i++) { const a = (i / 6) * TAU + Math.PI / 6; g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(a) * r * 0.85, Math.sin(a) * r * 0.85); g.lineTo(Math.cos(a + 0.5) * r * 1.1, Math.sin(a + 0.5) * r * 1.1); g.stroke(); }
+      g.fillStyle = "#0f1a05"; g.beginPath(); g.ellipse(0, 0, r * 0.62, r * 0.5, 0, 0, TAU); g.fill(); g.stroke();
+      noGlow(g); g.fillStyle = "#fef08a"; g.beginPath(); g.arc(-r * 0.22, -r * 0.12, r * 0.13, 0, TAU); g.arc(r * 0.22, -r * 0.12, r * 0.13, 0, TAU); g.fill();
+    },
+    brute(g, h, r) {
+      const c = h.color;
+      glow(g, c, 12); g.fillStyle = "#150a1f"; g.strokeStyle = c; g.lineWidth = 2.5;
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU; g.beginPath(); g.moveTo(Math.cos(a - 0.18) * r * 0.75, Math.sin(a - 0.18) * r * 0.75); g.lineTo(Math.cos(a) * r * 1.05, Math.sin(a) * r * 1.05); g.lineTo(Math.cos(a + 0.18) * r * 0.75, Math.sin(a + 0.18) * r * 0.75); g.closePath(); g.fill(); g.stroke(); }
+      g.beginPath(); g.roundRect(-r * 0.78, -r * 0.78, r * 1.56, r * 1.56, r * 0.35); g.fill(); g.stroke();
+      g.fillStyle = c; g.beginPath(); g.arc(0, 0, r * 0.26, 0, TAU); g.fill();
+      noGlow(g); g.fillStyle = "#fff"; g.beginPath(); g.arc(0, 0, r * 0.12, 0, TAU); g.fill();
+    },
+    boss(g, h, r) {
+      const c = h.color;
+      glow(g, c, 18); g.fillStyle = "#16040a"; g.strokeStyle = c; g.lineWidth = 3;
+      poly(g, 6, r, 0); g.fill(); g.stroke(); g.lineWidth = 2; poly(g, 6, r * 0.7, Math.PI / 6); g.stroke();
+      for (let i = 0; i < 6; i++) { const a = (i / 6) * TAU; g.beginPath(); g.moveTo(Math.cos(a) * r * 0.7, Math.sin(a) * r * 0.7); g.lineTo(Math.cos(a) * r, Math.sin(a) * r); g.stroke(); }
+      g.fillStyle = c; g.beginPath(); g.arc(0, 0, r * 0.32, 0, TAU); g.fill();
+      noGlow(g); g.fillStyle = "#fff"; g.beginPath(); g.arc(0, 0, r * 0.14, 0, TAU); g.fill();
+    },
+  };
+
+  // ================= НЕОН 2.0 =================
+  const flame = (g, x, y, r, t, c, len, w, seed) => {
+    const f = len * (0.75 + 0.25 * Math.sin(t * 38 + seed) + 0.1 * Math.sin(t * 91 + seed * 3));
+    const grd = g.createLinearGradient(x, 0, x - f * r, 0);
+    grd.addColorStop(0, "#ffffff"); grd.addColorStop(0.25, light(c, 0.3)); grd.addColorStop(1, rgba(c, 0));
+    g.fillStyle = grd; g.beginPath(); g.moveTo(x, y - w * r); g.quadraticCurveTo(x - f * r * 0.6, y, x - f * r, y); g.quadraticCurveTo(x - f * r * 0.6, y, x, y + w * r); g.closePath(); g.fill();
+  };
+  const NEON = {
+    ship(g, h, r, t) {
+      const c = h.color, hull = HULLS[h.hull];
+      ENGINES[h.hull].forEach(([x, y], i) => flame(g, x * r, y * r, r, t, c, h.hull === "stealth" ? 0.9 : 0.65, h.hull === "heavy" ? 0.1 : 0.09, i * 1.7));
+      glow(g, c, 16); g.lineWidth = 2;
+      const fill = g.createLinearGradient(r, 0, -r, 0); fill.addColorStop(0, dark(c, 0.62)); fill.addColorStop(1, "#05070f");
+      g.fillStyle = h.hull === "stealth" ? rgba(dark(c, 0.55), 0.75) : fill; g.strokeStyle = c;
+      pts(g, hull, r); g.fill(); g.stroke(); noGlow(g);
+      // панельные линии
+      g.strokeStyle = rgba(c, 0.45); g.lineWidth = 1;
+      g.beginPath(); g.moveTo(0.85 * r, 0); g.lineTo(-0.7 * r, 0); g.stroke();
+      if (h.hull === "assault") {
+        g.beginPath(); g.moveTo(-0.15 * r, -0.34 * r); g.lineTo(-0.5 * r, -0.12 * r); g.moveTo(-0.15 * r, 0.34 * r); g.lineTo(-0.5 * r, 0.12 * r); g.stroke();
+        g.fillStyle = c; for (const s of [-1, 1]) g.fillRect(0.05 * r, s * 0.55 * r - 0.04 * r, 0.7 * r, 0.08 * r); // пушки
+      } else if (h.hull === "heavy") {
+        for (const s of [-1, 1]) {
+          g.strokeStyle = c; g.fillStyle = "#0b0f1c"; g.lineWidth = 1.5; g.beginPath(); g.roundRect(-0.55 * r, s * 0.72 * r - 0.14 * r, 0.75 * r, 0.28 * r, 3); g.fill(); g.stroke();
+          g.fillStyle = light(c, 0.3); for (let k = 0; k < 3; k++) { g.beginPath(); g.arc((0.1 - k * 0.22) * r, s * 0.72 * r, 0.06 * r, 0, TAU); g.fill(); }
+        }
+        g.strokeStyle = rgba(c, 0.4); g.lineWidth = 1; g.beginPath(); g.moveTo(0.1 * r, -0.5 * r); g.lineTo(0.1 * r, 0.5 * r); g.moveTo(-0.35 * r, -0.5 * r); g.lineTo(-0.35 * r, 0.5 * r); g.stroke();
+      } else {
+        const p = 0.5 + 0.5 * Math.sin(t * 3);
+        g.strokeStyle = rgba(light(c, 0.3), 0.35 + p * 0.5); g.lineWidth = 1.2; pts(g, hull, r * 0.82); g.stroke();
+      }
+      // кабина
+      const cx = h.hull === "heavy" ? 0.55 : 0.38, rx = h.hull === "stealth" ? 0.3 : 0.24, ry = h.hull === "stealth" ? 0.06 : 0.12;
+      glow(g, c, 10); g.fillStyle = light(c, 0.35); g.beginPath(); g.ellipse(cx * r, 0, rx * r, ry * r, 0, 0, TAU); g.fill(); noGlow(g);
+      g.fillStyle = "rgba(255,255,255,.85)"; g.beginPath(); g.ellipse((cx + 0.06) * r, -ry * 0.35 * r, rx * 0.4 * r, ry * 0.3 * r, 0, 0, TAU); g.fill();
+      // огни на крыльях
+      if (Math.sin(t * 5) > 0.2) { g.fillStyle = "#fff"; glow(g, c, 8); const tip = h.hull === "heavy" ? [-0.4, 0.95] : h.hull === "stealth" ? [-0.12, 0.88] : [-0.7, 0.92]; for (const s of [-1, 1]) { g.beginPath(); g.arc(tip[0] * r, s * tip[1] * r, 0.06 * r, 0, TAU); g.fill(); } noGlow(g); }
+    },
+    drone(g, h, r, t) {
+      const c = h.color;
+      g.strokeStyle = rgba(c, 0.7); g.lineWidth = 1.6;
+      for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { g.beginPath(); g.moveTo(0, 0); g.lineTo(sx * r * 0.78, sy * r * 0.78); g.stroke(); }
+      for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+        const x = sx * r * 0.78, y = sy * r * 0.78, a = t * 26 * sx;
+        g.fillStyle = rgba(c, 0.12); g.beginPath(); g.arc(x, y, r * 0.36, 0, TAU); g.fill();
+        glow(g, c, 6); g.strokeStyle = light(c, 0.2); g.lineWidth = 1.6;
+        g.beginPath(); g.moveTo(x + Math.cos(a) * r * 0.34, y + Math.sin(a) * r * 0.34); g.lineTo(x - Math.cos(a) * r * 0.34, y - Math.sin(a) * r * 0.34); g.stroke(); noGlow(g);
+      }
+      glow(g, c, 10); g.fillStyle = "#1a0610"; g.strokeStyle = c; g.lineWidth = 2;
+      pts(g, [[0, -0.62], [0.62, 0], [0, 0.62], [-0.62, 0]], r); g.fill(); g.stroke(); noGlow(g);
+      const p = 0.5 + 0.5 * Math.sin(t * 6);
+      const eye = g.createRadialGradient(0, 0, 0, 0, 0, r * 0.4); eye.addColorStop(0, "#fff"); eye.addColorStop(0.35, light(c, 0.2)); eye.addColorStop(1, rgba(c, 0));
+      g.fillStyle = eye; g.beginPath(); g.arc(0, 0, r * (0.3 + p * 0.12), 0, TAU); g.fill();
+    },
+    crawler(g, h, r, t) {
+      const c = h.color;
+      g.lineWidth = 1.6; g.strokeStyle = c; glow(g, c, 6);
+      for (let i = 0; i < 3; i++) for (const s of [-1, 1]) {
+        const base = (-0.6 + i * 0.6), swing = Math.sin(t * 12 + i * 2.1 + (s > 0 ? Math.PI : 0)) * 0.28;
+        const a1 = s * (Math.PI / 2 + base * 0.9 + swing), kx = Math.cos(a1) * r * 0.7, ky = Math.sin(a1) * r * 0.7;
+        g.beginPath(); g.moveTo(0, 0); g.lineTo(kx, ky); g.lineTo(kx + Math.cos(a1 - s * 0.9) * r * 0.45, ky + Math.sin(a1 - s * 0.9) * r * 0.45); g.stroke();
+      }
+      noGlow(g);
+      const seg = (x, rx, ry) => { g.fillStyle = "#0d1604"; g.strokeStyle = c; g.lineWidth = 1.8; g.beginPath(); g.ellipse(x * r, 0, rx * r, ry * r, 0, 0, TAU); g.fill(); g.stroke(); };
+      glow(g, c, 8); seg(-0.5, 0.42, 0.36); seg(0, 0.32, 0.3); seg(0.42, 0.27, 0.26); noGlow(g);
+      g.strokeStyle = rgba(c, 0.5); g.lineWidth = 1; g.beginPath(); g.moveTo(-0.7 * r, -0.2 * r); g.lineTo(-0.3 * r, -0.2 * r); g.moveTo(-0.72 * r, 0.05 * r); g.lineTo(-0.28 * r, 0.05 * r); g.stroke();
+      const m = Math.sin(t * 8) * 0.15; g.strokeStyle = light(c, 0.3); g.lineWidth = 1.6;
+      for (const s of [-1, 1]) { g.beginPath(); g.moveTo(0.62 * r, s * 0.1 * r); g.quadraticCurveTo(0.85 * r, s * (0.25 + m) * r, 0.95 * r, s * 0.04 * r); g.stroke(); }
+      g.fillStyle = "#fef08a"; glow(g, "#fef08a", 6); for (const s of [-1, 1]) { g.beginPath(); g.arc(0.5 * r, s * 0.11 * r, 0.07 * r, 0, TAU); g.fill(); } noGlow(g);
+    },
+    brute(g, h, r, t) {
+      const c = h.color, rot = t * 0.6;
+      glow(g, c, 12); g.fillStyle = "#150a1f"; g.strokeStyle = c; g.lineWidth = 2.2;
+      for (let i = 0; i < 10; i++) { const a = rot + (i / 10) * TAU; g.beginPath(); g.moveTo(Math.cos(a - 0.16) * r * 0.78, Math.sin(a - 0.16) * r * 0.78); g.lineTo(Math.cos(a) * r * 1.08, Math.sin(a) * r * 1.08); g.lineTo(Math.cos(a + 0.16) * r * 0.78, Math.sin(a + 0.16) * r * 0.78); g.closePath(); g.fill(); g.stroke(); }
+      g.beginPath(); g.roundRect(-r * 0.74, -r * 0.74, r * 1.48, r * 1.48, r * 0.36); g.fill(); g.stroke(); noGlow(g);
+      g.strokeStyle = rgba(c, 0.5); g.lineWidth = 1.4;
+      for (const [x, y] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.beginPath(); g.roundRect(x * r * 0.42 - r * 0.22, y * r * 0.42 - r * 0.22, r * 0.44, r * 0.44, r * 0.1); g.stroke(); }
+      const p = 0.5 + 0.5 * Math.sin(t * 4);
+      g.strokeStyle = rgba(light(c, 0.4), 0.4 + p * 0.5); g.lineWidth = 1.5; glow(g, c, 10);
+      g.beginPath(); g.moveTo(-r * 0.5, -r * 0.1); g.lineTo(-r * 0.2, 0); g.lineTo(-r * 0.32, r * 0.3); g.moveTo(r * 0.45, r * 0.05); g.lineTo(r * 0.18, -r * 0.05); g.lineTo(r * 0.3, -r * 0.35); g.stroke();
+      const core = g.createRadialGradient(0, 0, 0, 0, 0, r * 0.45); core.addColorStop(0, "#fff"); core.addColorStop(0.3, light(c, 0.2)); core.addColorStop(1, rgba(c, 0));
+      g.fillStyle = core; g.beginPath(); g.arc(0, 0, r * (0.3 + p * 0.1), 0, TAU); g.fill(); noGlow(g);
+    },
+    boss(g, h, r, t) {
+      const c = h.color, rot = t * 0.35;
+      glow(g, c, 18); g.fillStyle = "#140a02"; g.strokeStyle = c; g.lineWidth = 3;
+      poly(g, 6, r, Math.PI / 6); g.fill(); g.stroke(); noGlow(g);
+      g.strokeStyle = rgba(c, 0.45); g.lineWidth = 1.4; poly(g, 6, r * 0.82, Math.PI / 6); g.stroke();
+      for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + (i / 6) * TAU; g.beginPath(); g.moveTo(Math.cos(a) * r * 0.82, Math.sin(a) * r * 0.82); g.lineTo(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55); g.stroke(); }
+      // ангарные огни
+      for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + (i / 6) * TAU, on = Math.sin(t * 4 - i) > 0.3; g.fillStyle = on ? "#fff" : rgba(c, 0.35); if (on) glow(g, c, 8); g.beginPath(); g.arc(Math.cos(a) * r * 0.9, Math.sin(a) * r * 0.9, r * 0.035, 0, TAU); g.fill(); noGlow(g); }
+      // вращающееся кольцо турелей
+      g.strokeStyle = c; g.lineWidth = 2; g.beginPath(); g.arc(0, 0, r * 0.55, 0, TAU); g.stroke();
+      for (let i = 0; i < 6; i++) {
+        const a = rot + (i / 6) * TAU, x = Math.cos(a) * r * 0.55, y = Math.sin(a) * r * 0.55;
+        g.save(); g.translate(x, y); g.rotate(a); glow(g, c, 8); g.fillStyle = "#1c1206"; g.strokeStyle = c; g.lineWidth = 1.6;
+        g.beginPath(); g.roundRect(-r * 0.09, -r * 0.09, r * 0.18, r * 0.18, 3); g.fill(); g.stroke();
+        g.fillStyle = c; g.fillRect(r * 0.09, -r * 0.025, r * 0.16, r * 0.05); noGlow(g); g.restore();
+      }
+      const p = 0.5 + 0.5 * Math.sin(t * 3);
+      const core = g.createRadialGradient(0, 0, 0, 0, 0, r * 0.4); core.addColorStop(0, "#fff"); core.addColorStop(0.3, light(c, 0.15)); core.addColorStop(1, rgba(c, 0));
+      g.fillStyle = core; g.beginPath(); g.arc(0, 0, r * (0.3 + p * 0.08), 0, TAU); g.fill();
+    },
+  };
+
+  // ================= ОБЪЁМНЫЙ =================
+  const shadow = (g, r, sx = 0.12, sy = 0.2, rx = 0.95, ry = 0.75) => {
+    if (NOSHADOW) return;
+    const s = g.createRadialGradient(sx * r, sy * r, 0, sx * r, sy * r, r); s.addColorStop(0, "rgba(0,0,0,.55)"); s.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = s; g.beginPath(); g.ellipse(sx * r, sy * r, rx * r, ry * r, 0, 0, TAU); g.fill();
+  };
+  const metal = (g, r, tint) => {
+    const m = g.createLinearGradient(0, -r, 0, r);
+    m.addColorStop(0, mix("#e2e8f0", tint, 0.12)); m.addColorStop(0.45, mix("#94a3b8", tint, 0.15)); m.addColorStop(0.55, mix("#64748b", tint, 0.15)); m.addColorStop(1, "#1e293b");
+    return m;
+  };
+  const engineGlow = (g, x, y, rr, c, t, seed) => {
+    if (NOSHADOW) return;
+    const f = 0.85 + 0.15 * Math.sin(t * 40 + seed);
+    g.save(); g.globalCompositeOperation = "lighter";
+    const e = g.createRadialGradient(x, y, 0, x, y, rr * f); e.addColorStop(0, "#fff"); e.addColorStop(0.3, rgba(light(c, 0.2), 0.9)); e.addColorStop(1, rgba(c, 0));
+    g.fillStyle = e; g.beginPath(); g.arc(x, y, rr * f, 0, TAU); g.fill(); g.restore();
+  };
+  const VOLUME = {
+    ship(g, h, r, t) {
+      const c = h.color, hull = HULLS[h.hull];
+      if (!NOSHADOW) { g.save(); g.translate(0.1 * r, 0.22 * r); g.fillStyle = "rgba(0,0,0,.45)"; g.filter = "blur(3px)"; pts(g, hull, r); g.fill(); g.restore(); }
+      ENGINES[h.hull].forEach(([x, y], i) => engineGlow(g, (x - 0.12) * r, y * r, r * (h.hull === "heavy" ? 0.3 : 0.36), c, t, i * 2));
+      g.fillStyle = metal(g, r, c); g.strokeStyle = "#0f172a"; g.lineWidth = 1.2; pts(g, hull, r); g.fill(); g.stroke();
+      // цветные полосы
+      g.fillStyle = c;
+      if (h.hull === "assault") { for (const s of [-1, 1]) { g.beginPath(); g.moveTo(-0.6 * r, s * 0.9 * r); g.lineTo(-0.45 * r, s * 0.62 * r); g.lineTo(-0.3 * r, s * 0.66 * r); g.lineTo(-0.48 * r, s * 0.93 * r); g.closePath(); g.fill(); } g.fillStyle = "#334155"; for (const s of [-1, 1]) g.fillRect(0.05 * r, s * 0.55 * r - 0.05 * r, 0.72 * r, 0.1 * r); }
+      if (h.hull === "heavy") {
+        for (const s of [-1, 1]) {
+          const pod = g.createLinearGradient(0, s * 0.58 * r, 0, s * 0.86 * r); pod.addColorStop(0, "#cbd5e1"); pod.addColorStop(1, "#334155");
+          g.fillStyle = pod; g.strokeStyle = "#0f172a"; g.beginPath(); g.roundRect(-0.58 * r, s * 0.72 * r - 0.15 * r, 0.8 * r, 0.3 * r, 4); g.fill(); g.stroke();
+          for (let k = 0; k < 3; k++) { g.fillStyle = k === 0 ? "#ef4444" : "#f8fafc"; g.beginPath(); g.arc((0.14 - k * 0.24) * r, s * 0.72 * r, 0.065 * r, 0, TAU); g.fill(); }
+        }
+        g.fillStyle = c; g.fillRect(-0.35 * r, -0.08 * r, 0.6 * r, 0.16 * r);
+      }
+      if (h.hull === "stealth") { g.fillStyle = rgba(dark(c, 0.4), 0.85); pts(g, hull, r * 0.8); g.fill(); g.strokeStyle = rgba(light(c, 0.3), 0.6); g.lineWidth = 1; g.stroke(); }
+      // панели
+      g.strokeStyle = "rgba(15,23,42,.55)"; g.lineWidth = 1; g.beginPath(); g.moveTo(0.8 * r, 0); g.lineTo(-0.75 * r, 0); g.moveTo(0.1 * r, -0.3 * r); g.lineTo(0.1 * r, 0.3 * r); g.stroke();
+      // кабина-стекло
+      const cx = h.hull === "heavy" ? 0.55 : 0.4, rx = h.hull === "stealth" ? 0.32 : 0.26, ry = h.hull === "stealth" ? 0.07 : 0.14;
+      const glass = g.createRadialGradient((cx + 0.08) * r, -ry * 0.4 * r, 0, cx * r, 0, rx * r); glass.addColorStop(0, "#f0f9ff"); glass.addColorStop(0.35, light(c, 0.25)); glass.addColorStop(1, dark(c, 0.55));
+      g.fillStyle = glass; g.strokeStyle = "#0f172a"; g.beginPath(); g.ellipse(cx * r, 0, rx * r, ry * r, 0, 0, TAU); g.fill(); g.stroke();
+      g.fillStyle = "rgba(255,255,255,.75)"; g.beginPath(); g.ellipse((cx + 0.08) * r, -ry * 0.45 * r, rx * 0.35 * r, ry * 0.25 * r, 0, 0, TAU); g.fill();
+    },
+    drone(g, h, r, t) {
+      const c = h.color;
+      shadow(g, r, 0.15, 0.3, 1.0, 0.8);
+      for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+        g.strokeStyle = "#475569"; g.lineWidth = r * 0.14; g.beginPath(); g.moveTo(0, 0); g.lineTo(sx * r * 0.75, sy * r * 0.75); g.stroke();
+        const x = sx * r * 0.78, y = sy * r * 0.78;
+        const blur = g.createRadialGradient(x, y, r * 0.05, x, y, r * 0.4); blur.addColorStop(0, "rgba(203,213,225,.65)"); blur.addColorStop(0.7, "rgba(148,163,184,.25)"); blur.addColorStop(1, "rgba(148,163,184,0)");
+        g.fillStyle = blur; g.beginPath(); g.arc(x, y, r * 0.4, 0, TAU); g.fill();
+        g.strokeStyle = "rgba(226,232,240,.5)"; g.lineWidth = 1; const a = t * 30 * sx; g.beginPath(); g.moveTo(x + Math.cos(a) * r * 0.36, y + Math.sin(a) * r * 0.36); g.lineTo(x - Math.cos(a) * r * 0.36, y - Math.sin(a) * r * 0.36); g.stroke();
+        g.fillStyle = "#1e293b"; g.beginPath(); g.arc(x, y, r * 0.08, 0, TAU); g.fill();
+      }
+      const body = g.createRadialGradient(-0.2 * r, -0.25 * r, 0, 0, 0, r * 0.6); body.addColorStop(0, "#e2e8f0"); body.addColorStop(0.5, "#64748b"); body.addColorStop(1, "#0f172a");
+      g.fillStyle = body; g.beginPath(); g.arc(0, 0, r * 0.52, 0, TAU); g.fill();
+      g.strokeStyle = c; g.lineWidth = r * 0.08; g.beginPath(); g.arc(0, 0, r * 0.4, -0.6, 0.6); g.stroke(); g.beginPath(); g.arc(0, 0, r * 0.4, Math.PI - 0.6, Math.PI + 0.6); g.stroke();
+      const p = 0.5 + 0.5 * Math.sin(t * 6);
+      const eye = g.createRadialGradient(0, 0, 0, 0, 0, r * 0.26); eye.addColorStop(0, "#fff"); eye.addColorStop(0.4, c); eye.addColorStop(1, dark(c, 0.6));
+      g.fillStyle = eye; g.beginPath(); g.arc(0, 0, r * (0.18 + p * 0.05), 0, TAU); g.fill();
+    },
+    crawler(g, h, r, t) {
+      const c = h.color;
+      shadow(g, r, 0.1, 0.25, 1.05, 0.85);
+      for (let i = 0; i < 3; i++) for (const s of [-1, 1]) {
+        const base = (-0.6 + i * 0.6), swing = Math.sin(t * 12 + i * 2.1 + (s > 0 ? Math.PI : 0)) * 0.28;
+        const a1 = s * (Math.PI / 2 + base * 0.9 + swing), kx = Math.cos(a1) * r * 0.72, ky = Math.sin(a1) * r * 0.72;
+        g.lineCap = "round"; g.strokeStyle = dark(c, 0.65); g.lineWidth = r * 0.13; g.beginPath(); g.moveTo(0, 0); g.lineTo(kx, ky); g.stroke();
+        g.strokeStyle = dark(c, 0.45); g.lineWidth = r * 0.09; g.beginPath(); g.moveTo(kx, ky); g.lineTo(kx + Math.cos(a1 - s * 0.9) * r * 0.48, ky + Math.sin(a1 - s * 0.9) * r * 0.48); g.stroke();
+      }
+      const seg = (x, rx, ry) => {
+        const b = g.createRadialGradient((x - rx * 0.2) * r, -ry * 0.45 * r, 0, x * r, 0, Math.max(rx, ry) * r * 1.1);
+        b.addColorStop(0, light(c, 0.55)); b.addColorStop(0.45, c); b.addColorStop(1, dark(c, 0.7));
+        g.fillStyle = b; g.strokeStyle = dark(c, 0.75); g.lineWidth = 1; g.beginPath(); g.ellipse(x * r, 0, rx * r, ry * r, 0, 0, TAU); g.fill(); g.stroke();
+      };
+      seg(-0.5, 0.44, 0.38); seg(0, 0.33, 0.31); seg(0.43, 0.28, 0.27);
+      g.strokeStyle = rgba(dark(c, 0.7), 0.7); g.lineWidth = 1.2; for (const x of [-0.65, -0.38]) { g.beginPath(); g.arc(x * r, 0, 0.36 * r, -1.1, 1.1); g.stroke(); }
+      g.strokeStyle = "#1a2e05"; g.lineWidth = r * 0.07; const m = Math.sin(t * 8) * 0.15;
+      for (const s of [-1, 1]) { g.beginPath(); g.moveTo(0.62 * r, s * 0.1 * r); g.quadraticCurveTo(0.86 * r, s * (0.26 + m) * r, 0.97 * r, s * 0.04 * r); g.stroke(); }
+      for (const s of [-1, 1]) { const e = g.createRadialGradient(0.52 * r, s * 0.1 * r, 0, 0.52 * r, s * 0.11 * r, 0.08 * r); e.addColorStop(0, "#fff"); e.addColorStop(0.5, "#facc15"); e.addColorStop(1, "#713f12"); g.fillStyle = e; g.beginPath(); g.arc(0.52 * r, s * 0.11 * r, 0.075 * r, 0, TAU); g.fill(); }
+    },
+    brute(g, h, r, t) {
+      const c = h.color, rot = t * 0.6;
+      shadow(g, r, 0.12, 0.2, 1.1, 0.95);
+      for (let i = 0; i < 10; i++) {
+        const a = rot + (i / 10) * TAU, tipx = Math.cos(a) * r * 1.08, tipy = Math.sin(a) * r * 1.08;
+        const sp = g.createLinearGradient(Math.cos(a) * r * 0.75, Math.sin(a) * r * 0.75, tipx, tipy); sp.addColorStop(0, "#334155"); sp.addColorStop(1, "#e2e8f0");
+        g.fillStyle = sp; g.beginPath(); g.moveTo(Math.cos(a - 0.16) * r * 0.76, Math.sin(a - 0.16) * r * 0.76); g.lineTo(tipx, tipy); g.lineTo(Math.cos(a + 0.16) * r * 0.76, Math.sin(a + 0.16) * r * 0.76); g.closePath(); g.fill();
+      }
+      const body = g.createRadialGradient(-0.3 * r, -0.35 * r, 0, 0, 0, r * 1.05); body.addColorStop(0, light(c, 0.35)); body.addColorStop(0.5, dark(c, 0.35)); body.addColorStop(1, dark(c, 0.8));
+      g.fillStyle = body; g.strokeStyle = dark(c, 0.85); g.lineWidth = 1.5; g.beginPath(); g.roundRect(-r * 0.75, -r * 0.75, r * 1.5, r * 1.5, r * 0.38); g.fill(); g.stroke();
+      for (const [x, y] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        const pl = g.createLinearGradient(x * r * 0.42, y * r * 0.42 - r * 0.22, x * r * 0.42, y * r * 0.42 + r * 0.22); pl.addColorStop(0, light(c, 0.25)); pl.addColorStop(1, dark(c, 0.6));
+        g.fillStyle = pl; g.strokeStyle = dark(c, 0.8); g.lineWidth = 1; g.beginPath(); g.roundRect(x * r * 0.42 - r * 0.21, y * r * 0.42 - r * 0.21, r * 0.42, r * 0.42, r * 0.1); g.fill(); g.stroke();
+      }
+      const p = 0.5 + 0.5 * Math.sin(t * 4);
+      g.save(); g.globalCompositeOperation = "lighter";
+      const core = g.createRadialGradient(0, 0, 0, 0, 0, r * 0.42); core.addColorStop(0, "#fff"); core.addColorStop(0.35, light(c, 0.2)); core.addColorStop(1, rgba(c, 0));
+      g.fillStyle = core; g.beginPath(); g.arc(0, 0, r * (0.3 + p * 0.1), 0, TAU); g.fill(); g.restore();
+    },
+    boss(g, h, r, t) {
+      const c = h.color, rot = t * 0.35;
+      if (!NOSHADOW) { g.save(); g.translate(r * 0.08, r * 0.14); g.fillStyle = "rgba(0,0,0,.5)"; g.filter = "blur(5px)"; poly(g, 6, r, Math.PI / 6); g.fill(); g.restore(); }
+      g.fillStyle = metal(g, r, c); g.strokeStyle = "#0f172a"; g.lineWidth = 2; poly(g, 6, r, Math.PI / 6); g.fill(); g.stroke();
+      g.fillStyle = "rgba(15,23,42,.35)"; poly(g, 6, r * 0.82, Math.PI / 6); g.fill();
+      // жёлто-чёрные полосы опасности по краям
+      g.save(); poly(g, 6, r, Math.PI / 6); g.clip();
+      g.fillStyle = c; for (let i = 0; i < 6; i++) { const a = (i / 6) * TAU; g.save(); g.rotate(a); for (let k = -3; k <= 3; k++) { g.beginPath(); g.moveTo(r * 0.84, k * r * 0.12); g.lineTo(r * 0.98, k * r * 0.12 + r * 0.06); g.lineTo(r * 0.98, k * r * 0.12 + r * 0.12); g.lineTo(r * 0.84, k * r * 0.12 + r * 0.06); g.closePath(); g.fill(); } g.restore(); }
+      g.restore();
+      // турели
+      const ring = g.createRadialGradient(0, 0, r * 0.45, 0, 0, r * 0.65); ring.addColorStop(0, "#1e293b"); ring.addColorStop(0.5, "#64748b"); ring.addColorStop(1, "#1e293b");
+      g.strokeStyle = ring; g.lineWidth = r * 0.14; g.beginPath(); g.arc(0, 0, r * 0.55, 0, TAU); g.stroke();
+      for (let i = 0; i < 6; i++) {
+        const a = rot + (i / 6) * TAU; g.save(); g.translate(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55); g.rotate(a);
+        g.fillStyle = "#334155"; g.fillRect(r * 0.05, -r * 0.03, r * 0.22, r * 0.06);
+        const tb = g.createRadialGradient(-r * 0.03, -r * 0.04, 0, 0, 0, r * 0.12); tb.addColorStop(0, "#e2e8f0"); tb.addColorStop(1, "#334155");
+        g.fillStyle = tb; g.beginPath(); g.arc(0, 0, r * 0.1, 0, TAU); g.fill(); g.restore();
+      }
+      const p = 0.5 + 0.5 * Math.sin(t * 3);
+      g.save(); g.globalCompositeOperation = "lighter";
+      const core = g.createRadialGradient(0, 0, 0, 0, 0, r * 0.42); core.addColorStop(0, "#fff"); core.addColorStop(0.3, light(c, 0.1)); core.addColorStop(1, rgba(c, 0));
+      g.fillStyle = core; g.beginPath(); g.arc(0, 0, r * (0.3 + p * 0.08), 0, TAU); g.fill(); g.restore();
+    },
+  };
+
+  // ================= ПИКСЕЛЬ-АРТ =================
+  // o — контур, d — тень, b — основной, l — свет, e — кабина/глаз, w — белый, f — пламя, g — лапы
+  const PX = {
+    kai: [[
+      "       ww       ", "      wllw      ", "      lbbl      ", "     obeebo     ", "     obeebo     ", "    obbbbbbo    ", "   obbbllbbbo   ", "  obbdbbbbdbbo  ",
+      " obbddbbbbddbbo ", "obbd obbbbo dbbo", "obd  obddbo  dbo", "od   obddbo   do", "o    oddddo    o", "      oddo      ", "      ffff      ", "       ff       "],
+      ["       ww       ", "      wllw      ", "      lbbl      ", "     obeebo     ", "     obeebo     ", "    obbbbbbo    ", "   obbbllbbbo   ", "  obbdbbbbdbbo  ",
+      " obbddbbbbddbbo ", "obbd obbbbo dbbo", "obd  obddbo  dbo", "od   obddbo   do", "o    oddddo    o", "      oddo      ", "       ff       ", "      f  f      "]],
+    titan: [[
+      "     oooooo     ", "    obllllbo    ", "   obbeeeebbo   ", " oobbbeeeebbboo ", "oblbbbbbbbbbblbo", "obwbbbbllbbbbwbo", "obwbddbbbbddbwbo", "obbbbbbbbbbbbbbo",
+      "obdbbbbllbbbbdbo", "obbbbddbbddbbbbo", "obbbbbbbbbbbbbbo", " obbbo oo obbbo ", " oddo      oddo ", "  ff        ff  ", "  ff        ff  ", "   f        f   "],
+      ["     oooooo     ", "    obllllbo    ", "   obbeeeebbo   ", " oobbbeeeebbboo ", "oblbbbbbbbbbblbo", "obwbbbbllbbbbwbo", "obwbddbbbbddbwbo", "obbbbbbbbbbbbbbo",
+      "obdbbbbllbbbbdbo", "obbbbddbbddbbbbo", "obbbbbbbbbbbbbbo", " obbbo oo obbbo ", " oddo      oddo ", "  ff        ff  ", "   f        f   ", "                "]],
+    ghost: [[
+      "       ll       ", "       bb       ", "      obbo      ", "      obeo      ", "  o   obeo   o  ", "  lo  obbo  ol  ", "  blo obbo olb  ", "   bbobbbbobb   ",
+      "    bbbbbbbb    ", "     bbddbb     ", "      bddb      ", "      oddo      ", "       ff       ", "       ff       ", "       f        ", "                "],
+      ["       ll       ", "       bb       ", "      obbo      ", "      obeo      ", "  o   obeo   o  ", "  lo  obbo  ol  ", "  blo obbo olb  ", "   bbobbbbobb   ",
+      "    bbbbbbbb    ", "     bbddbb     ", "      bddb      ", "      oddo      ", "       ff       ", "        f       ", "       f        ", "        f       "]],
+    drone: [[
+      " ll          ll ", "l  l        l  l", "l  l        l  l", " ll o      o ll ", "     o    o     ", "      obbo      ", "     obddbo     ", "    obdeedbo    ",
+      "    obdeedbo    ", "     obddbo     ", "      obbo      ", "     o    o     ", " ll o      o ll ", "l  l        l  l", "l  l        l  l", " ll          ll "],
+      [" bb          bb ", "w  w        w  w", "w  w        w  w", " bb o      o bb ", "     o    o     ", "      obbo      ", "     obddbo     ", "    obdwwdbo    ",
+      "    obdwwdbo    ", "     obddbo     ", "      obbo      ", "     o    o     ", " bb o      o bb ", "w  w        w  w", "w  w        w  w", " bb          bb "]],
+    crawler: [[
+      "  g          g  ", "   g  ollo   g  ", "    gobllbog    ", " gg obbbbbo gg  ", "   goblbblbog   ", "    obbbbbbo    ", " gggobddddbogg  ", "g   obbbbbbo  g ",
+      "    obddddbo    ", "  ggobbbbbbogg  ", " g  obddddbo  g ", "    obbbbbbo    ", "     obbbbo     ", "      oeeo      ", "     e    e     ", "                "],
+      ["   g        g   ", "  g   ollo   g  ", "   g obllbo g   ", "  ggobbbbbbogg  ", " g  oblbblbo  g ", "    obbbbbbo    ", "  ggobddddbogg  ", " g  obbbbbbo  g ",
+      "    obddddbo    ", " gggobbbbbboggg ", "g   obddddbo   g", "    obbbbbbo    ", "     obbbbo     ", "      oeeo      ", "    e      e    ", "                "]],
+    brute: [[
+      "  o    oo    o  ", "   o  obbo  o   ", "    obbbbbbo    ", "  obbdbbbbdbbo  ", "  obddbllbddbo  ", "oobbbbbbbbbbbboo", " obblbbeebblbbo ", " obbbbewwebbbbo ",
+      " obbbbewwebbbbo ", " obblbbeebblbbo ", "oobbbbbbbbbbbboo", "  obddbbbbddbo  ", "  obbdbbbbdbbo  ", "    obbbbbbo    ", "   o  obbo  o   ", "  o    oo    o  "],
+      ["  o    oo    o  ", "   o  obbo  o   ", "    obbbbbbo    ", "  obbdbbbbdbbo  ", "  obddbllbddbo  ", "oobbbbbbbbbbbboo", " obblbbwwbblbbo ", " obbbbwwwwbbbbo ",
+      " obbbbwwwwbbbbo ", " obblbbwwbblbbo ", "oobbbbbbbbbbbboo", "  obddbbbbddbo  ", "  obbdbbbbdbbo  ", "    obbbbbbo    ", "   o  obbo  o   ", "  o    oo    o  "]],
+  };
+  // босс-дредноут: пиксели считаются формулой (шестиугольник 28×28)
+  const bossGrid = (frame) => {
+    const N = 28, rows = [];
+    for (let y = 0; y < N; y++) {
+      let s = "";
+      for (let x = 0; x < N; x++) {
+        const px = x - N / 2 + 0.5, py = y - N / 2 + 0.5;
+        const hexd = Math.max(Math.abs(px) * 0.866 + Math.abs(py) * 0.5, Math.abs(py));
+        const d = Math.hypot(px, py), a = Math.atan2(py, px);
+        let ch = " ";
+        if (hexd < 13.2) ch = hexd > 12 ? "o" : hexd > 10.8 ? ((Math.round(px + py) % 3 === 0) ? "d" : "b") : "d";
+        if (hexd < 10.8 && d > 6.2 && d < 7.6) ch = "l";
+        const tur = (((a - frame * 0.26) % (TAU / 6)) + TAU) % (TAU / 6);
+        if (hexd < 10.8 && d > 7.6 && d < 9.6 && Math.abs(tur - TAU / 12) < 0.18) ch = "w";
+        if (d < 3.4) ch = d < 1.8 ? "w" : "e";
+        if (hexd < 13.2 && hexd > 10.9 && (Math.abs(px) < 0.6 || Math.abs(Math.abs(py) - 6) < 0.6) && frame % 2) ch = "f";
+        s += ch;
+      }
+      rows.push(s);
+    }
+    return rows;
+  };
+  const PX_BOSS = [0, 1, 2, 3].map(bossGrid);
+  const pxPalette = (h, kind) => ({
+    o: dark(h.color, 0.82), d: dark(h.color, 0.45), b: h.color, l: light(h.color, 0.4), w: "#ffffff",
+    e: kind === "ship" ? "#e0f2fe" : light(h.color, 0.6), f: "#fbbf24", g: dark(h.color, 0.25),
+  });
+  const drawPx = (g, rows, size, pal) => {
+    const n = rows.length, cell = size / n, off = -size / 2;
+    for (let y = 0; y < n; y++) for (let x = 0; x < rows[y].length; x++) {
+      const ch = rows[y][x]; if (ch === " ") continue;
+      g.fillStyle = pal[ch]; g.fillRect(Math.floor(off + x * cell), Math.floor(off + y * cell), Math.ceil(cell), Math.ceil(cell));
+    }
+  };
+  const PIXEL = {
+    any(g, h, r, t, upright) {
+      const pal = pxPalette(h, h.kind);
+      const size = r * 2.1;
+      if (!upright && h.kind === "ship") g.rotate(Math.PI / 2); // в сцене корабль смотрит вправо
+      if (!upright && h.kind === "crawler") g.rotate(-Math.PI / 2); // пиксельный краулер нарисован головой вниз
+      if (h.kind === "boss") { drawPx(g, PX_BOSS[Math.floor(t * 4) % 4], size, pal); return; }
+      const frames = PX[h.id];
+      drawPx(g, frames[Math.floor(t * (h.kind === "drone" ? 14 : h.kind === "crawler" ? 7 : 8)) % 2], size, pal);
+    },
+  };
+
+  const KIMG = {};
+  KIMG.kai = Object.assign(new Image(), { src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGMAAABLCAYAAABkxDnOAAAKGElEQVR42u1d228U1xkf+g/wkpBEiYSqPlSKqiBVSaOqlWgk+lIponlIq6qJLCXqUxSRqFJpRRFygmgUnLpAuTgk2YDtNfiCL1gGs7Y3vi3e9S7rG16vL7trbMApOK4gl8eT+R3zLWeOZ8Zz2xrKOdInZPbcvt9v5nzfb+fMWU17CEo8Ht82NDQUGh4eZm5NbxuNxWLbNVUCIyPqhQiREIViACUSiWwmUO/cuePaqC36UWj6LFhiAObExIQnMtAO7dVSFcwSVQYwM5mMJzLQ7t5SVabQ9E/GPoCZy+U4uP+evOvYUB/t7pGxT6Hps1AWtbCwwG58dYf9LPKNY0N9tFNBPOBMamlpifUvuiMD9dHuHhlphabPkkgkVgDmysqKJzLQjjIqhabPIqa1oexdV2SgvpjeDg4OblWIBpTWIii7IYOCuEpvAySD0tq/p92RgfpieqsnA7sUqgGltX8a+toVGaiv0tvgyKiktBag/mHQHRmoj3YqvQ04rQWoboggQztKb/VlKq9Q9S748gBxeXnZFxlor9LbANPaKze9kYF2YnqLZyMKWZcFmgDgjY2NcTDdCj5R+KE9+lHpbUAao2Huricy0E7UGiqj8hYvdsnf1nohw+Tb20qFrkeNUSgUOJgfjHsjA+3QHv2o9DagtNat4JOFn0pvAyCD0lq/ZKj0NqC0FvZSjzcy0E7enKAyKheFdoRQWutV8InCT0xv9aVqp0LZYTnb0VkmprXTt/yRgfZietsS6Q4plNcp+2tqtlaE65v/eaaJVZ1rY+OZKV+CTxZ+k9PT7NOWdob+K+rORj8M16vlSi67q6o2f1TXsA8gwf5V38xqowNs+vrNQMlAf+gX/dNYB+saQrgIFAt6qQifLfso3LhC4IQ6e9iFkause3KGLd667UvwycIP/aFf9I9xaEyMj4sBF8UjSQKWiIpwQ7pIQkeEtQ+PcrDIbn21EigZ6E/sH+NhXOEuyePieLTigr5eEwDHmttZpw7K+PxN1iMABaMs6J3k177IQHvqS+wf42FcjI950Jw2Lp7srt+85f3z+554vzUKe/y9tsote5u2lSIuHAw3VJLDhxtaWMtAgl2ZW+CAwESg+rNzRQC9Cj5Z+PH4o/crjkNjYx6YD+ZV6ngCfIEzYQ78wYO25b225if3tzPR9P9beWpPU2CTqKit3yXGhbruPgMJHIzcogGkxFyhCODLvf7IQHvqC/2K46T0cQ3z0OeF+ZUqngBX4GuCebNGfzzXtMjth0eH6MNQEHEB67AYF2KTswbnyVISGRPXrhsE3+9j37I3Et+5NrQThR/6FcdJShcFGeZZingCXIEvcCbMiQONWPpp+20+afxLHz5W3rY9qLjQOzZl6jRZfHbeAFJm8YaBjLfas2xv64hr2908YiAD/YrjDM3M284L8w4qngBPwlbGGzxoWLPozqDb+sehiXsVWtOu44K+zopxoX0oZessGUARQaK0ljTGr/+4l/3ml696MlFrUHpLNjiddzQ/+OE3ngBP4Ap8CWu6M8BDkYyfnC0UKzx/4b/sqX9c5JUeL291dGtiXRXjQuMXsTVxwc76szkDSEu3lw1keCUC9vPqTJEM9CuO0zeVczxH+AO/vMQT4Ag8gSvwJayBe5EMRHKZLdiz4Vle6fXj52wHPFjbsFOMC9WdUZbI5h07SAZQzNJa2l/rh4xfnEwV993K6a2YUTk1+Ac/ncQT+nYBOAJP4CriXFyFkFFZkQF7s7rbcBWIt+YH1We2iXHh47YL68YFO+uxSGsh2ACmXzJI+Jmlt6OFG57mDH/ht1k8AU7AS1wtgKeMsYGMJ8pbd+KPrYcG1lQ8Ec+xcwNJdqL1/oA0qJlo82NWaS32y/ol41d7aov7bp2kt27NTDSKeAE/jqOOp4wxcOfLlM5DMcJbkdF5JcOtJZZmn3V0MTvR5tVkjTFSWDAIPoDplwxR+KF/A/mz1/z7YCIagRdwIwztyOCZK0QIBRY7MsjOx0dZfTTmKS5YmawxxLQ2CDJe+vNJAxlu01u38QT4ACcZOzMyKFEqimzKfZ2QAYtlgiPCTGPMf/kfg8bwk9bC0F7UGujf+NVLLlB/gI8ZbmZkFAWfoAoNwu9/TYaVxvD7uNXq8ausNdykt0GSYRB8VMyEnyKj9GQYBJ9Mhij8FBmlJ8Mg+IrLlIXWUGSUlgyDxlBkPIBkWAk/RUZpyTAIPvmrXUXGxpBheFRhJfwUGaUlY43go2Im/BQZpSVjjeCzE37rkTGav8GSswuKDN2AA/BwSoap4LMTfuuRkZ65ygbjp1hXMs66RrKsd3yWf5aYucbSuev/l2TAL/gHP+Ev/Ib/wAF4OCXDVPDZCb/1yMhONbHb3T/gdj36DMv3vshmU2+x8dQBlkid4nWjYzNsYDLHLk8VLO+iB5WMK3OLLJ6d5/OHH5fSU9wv+Ac/4S/8JgyAh1MyTAWfndYov5BiHcMTjsggY0nNYCuxp9ls3w6Wjv2NXz1oL99FA9n8hpLxRWaOXyiYT9/VOdY9Os3n2Zdo5vOe6n+F+yH7JvtuRwZwBJ62GsOKDNxGOw618k3C1ZE+AyluyPhmYNOaOsvJF9hi8rf86sKV1j/as7FkjCf5PDKpv/J5YX7ynOGHFzKAG/ADjsCTwoAtGbLwo/1TB2pXH5QcaWxjZ6KXAyFDrpMbfXtDyUiN16wLtBcygBdwA37AkfZLWQo+M+En7p16s6qxTHyMiM7bYin+/DeZOq3IEAx4ABfgQyTQY1jgKO6ZMhV8ZsLvRyeS97ccirvGpWe7H9eUs96TGkuc1tjVhk2s0L7pkSID/sLvVI3GcQAe8l4BccMb7SYEvpaCTxZ+ZGZ7pla38tc3Y6CTp/6SjlZpTLbLIY2lazWWb9Pt/OqkH2YyMH/4AX/gF/wz8xt4ABfgY7brkC540dbdB2qZclmUS8e07V1HtV3dx7VQ13HNlCDYwKerdxGcunlRz7SiDxYZd/tW54X5YZ6Yr5Uv8JP7q/sN/51ihd3nwmbn0Lrb1b3usbUiSLeolVOwxvBr7JOOCH/FqzWRZvNLX5aUDPSPcTAe3mCqbvyQ2c3PK/B2e245xngNYKPKxcPatq5jWpnuWKVIUPjz3xXX2aONLSybzZaUDPSPFzjF2Fcq4B+qAoI+OfVuGV6kwXob6etn4jEVXl/Gt3o5n46twDgYD7v+jlQfevSAd1LouG16Id/v+3zye33Ci/nqXXAnpyPQKc90vJHbgyKtDo6kY47Qv/o9DYeFfqYhlUrxA1iCeA8c/aA/9fMN3giJ+jlg2OqgYXXelIdCZxRSMMfPL7gN5qiPdhS01Xno/u4OfhpbOp3mp/27PacQ9dEO7dX5hMFkV3kvR3DLR2+rE9gCKHSKJ53K5vS4I9QTT19TB34FrD3I3q2LMvkLN9F2HO00/E6f0hQBaw/8TI8XMtDuYdEU3wPFT61hTodC4QAAAC10RVh0U29mdHdhcmUAYnkuYmxvb2RkeS5jcnlwdG8uaW1hZ2UuUE5HMjRFbmNvZGVyqAZ/7gAAAABJRU5ErkJggg==" });
+  KIMG.titan = Object.assign(new Image(), { src: "data:image/png;base64,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" });
+  KIMG.ghost = Object.assign(new Image(), { src: "data:image/png;base64,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" });
+  KIMG.drone = Object.assign(new Image(), { src: "data:image/png;base64,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" });
+  KIMG.crawler = Object.assign(new Image(), { src: "data:image/png;base64,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" });
+  KIMG.brute = Object.assign(new Image(), { src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGEAAABUCAYAAACSsVm9AAAKJUlEQVR42u1djU4UVxTeN/AR+gi+QFvaprZJW4P/oqKrKP6AukZRow202qDRhq4/NYgFtoogxra00ZKCIgHUolBRSTXGVkysRmMij3A738azXmbvzJx7Z3Z3mGWSYwKyM/ee75xzv3Pumbuxq1evzh4cHExdu3ZNmIj12YmBgYF4rMiuvr6+d6y5Jy2ZNNTb5NDQ0FeXL1+eFbMUOGYKgCzWffoxsGIAwJprwlT5dgEQMfrhxYsX4vXr19qCz92+fTuDLgYYZeuHsZHO7t+/L169emWkt8ePH2eMN0Y3xS9Nbkby6NEjcePGDbrxGMJcVK3/5s2b4unTp770NT4+/tYTcHP8cPfuXV83tXtF5gHT/IIxBWX9spDBpo0V/+AH/NLvjVVegYXbkpLpCACMiJQfhPWTPH/+PBO+Mw+DovDLoB6i8gowiTQTmD7WPxa09ZM8fPiQdJKSQUjRw4J6kItXlBaj9csyMjJCa2dcBqEUv8R/Bv1AB6/oCptXIGRSRIDAWnOhC3gUPWOKDvCDX6oKefbfM/HdwRNiZPgvjldMhiHJw9wRKmn+METEbNX4e7r7ROORFl8gTKGmCgrmm6oCgLXLtqSlvq5BDPZf9/SKQiZ5HOuHYUH5NdW1mbn99tPvvqmpMp/yS1UxMBqkLBg8JsHwikSYrB/K72z7WVRX7FTOa/ze3/6pqYoRmFLVfx796zhYNzAUXhHPkwd0OVm/l/JJamvq/VDTCbfBGVFVhB63AXuBQZRNGSedx1r6poDWBS/ihjQyNjAf2fq5ypcFf++bmiompk1VncIQBwxMApOHR2QlL7arpaVl9pUrVxKyFasqugDmwoULpU1NTbOcyg9y2IUXY7HVUb5pWCJq6krTdakqBmAycFkweYDR80fvFNoGpbe2tiZSqVSXJZOnT5/G/wk5jsNYYF1QKMVayPnz5wX+3vrcmCVJ6z4ZUGgtGBq8lla+3/HDmGBIxtRUtWDpUFXERb+TIDma/F6cO3dOnDlzZoyULotl3en148mTJ47ZK8ILFvyenh5x9uxZYb8HQOno6Jhsa2sTe2u+DmzsqVPt/qipKVWF9foZeFXFjrQiGg4fES3NLVkK6+zsFN3d3eL69eviwYMHaeW+fPmS5aETExPpv79z5w4mLbq6urLuDzlxvFHU7zssdiVqxfqV23zNxyk3YlFTE6qKB5oOdnv1XtF08lSWQmC5Fy9eTCsNA4YS7aILgl1GR0dBDR1BgTeagoGw6haWKFyyCASHqsqJi67IAEAZUDosVqW0oEGwy/DwsOjt7U2HOhrT/tqDxnNzyqZZ1FSXqvpZC2iyHCXlGgS7l5A3BL02SNQ0qQOCK1XFw2ZAyBZVmYZNTXWpKpKtGRCyRbUmyNRUu7biRlWR4MyAkJ0vuFFTJJkmG9uuVNU0w4wqCE6LshY11aWqctl6BgTn8rYWNdWlqqbJWlRBUNWQjKipDlU1TdiiCAJCc2DUVJeqzoDwdhfRg5qW+AHBlaqaJG1RBEG1r0DU1K08HwhVNUnaogiCqnjni5rqUFWTpC2KIKiSNImaxoMAwZGqmiRtUQPBaa/ZFzXVpaq6SVvUQFAV7YiaopUyyO4ER6qqm7RFDQRVO08g1FSHquombVEDASE5J9RUh6rqJm1RAkGVpAVGTXWparGCgFCcU2qqQ1V1krYogaAq2gVKTXWoqk7/TpRAUCVpRE1z0vrvRlV1krYogZAXasqlqjqdeNRjxO2wyBcI6PrAuNAHZVq0I2qa0xcm3agqN2k7dKAh09xFTV2FBoG8AMLtzFMV7Yia5vT1YTeqyu3MrizfKo4fO5FpbdQBIhcgwCOpZfLAN4eNOytyRk11qCo3aVtTVi0qVlSL5jdhCV13hQJBBiDZcFSsWFBpXLSTqGkqH2+2K6mqTtK2fP46sWF1IgMEek7zDQI8kDrv4JmrlmwQ5QvXG3dW5JSacqkqLEMHBMi2qt2ZWIzG33yBoAIA4+GCoOqsyCk11aGq3KQNbk9A1CT2soEICgSEQDwPnojQSGNZtXijUdEuL9SUS1W5SRssjiYOqd2zP9OZ7UZdgwABoY8AQEiUx8EFwd5ZIb3ulcgnCEqqyk3a7CBAwEy8gPALAjqwnQCArF5aZVS0yws15VJVbtIGi7MrAAKG4kZd/YCAUEdhD2uR6vkcEOxJmkRNJ2L5vNyoKidpcwIBC+TJxqa0opBABQkCvRiyp6ZO+WwI6LNukpZXasqlqpykLb5kk6MiyBtyBUJ15Q7HZ5sU7YiaFuTgFCeqykna4PbTFYSCUlMuVeUkbWEEgZMj2DsrJGraHyvUpaKqnKStomzztATB3llREGrKpaqcpC1sIKxctEE7SSsINeVSVU7SFjYQOIma3FlRMGrKpaqcpE2VsBUShPjiTVpFO4maJmOFvlRUlZO0hQ0Er0TN3llRUGrKpapeSRtisEoZtOGjAqGh/rjYsfFLTxm4OuQIgmm2bE/SiJrGwnA5UVWv9kinrJlKCyoQtq7dJT57d7GndF/scQQBxUKTHEFO0qTXoLpiYblUVNUraVOBQGVt1I5UBTg/IOAIBdwbZRHaP9ABIXTUlENVvZK21UuqsupGtNOm8gIIBwDIsW9PKj9P3oCKrfxsr21Ne5JG1DRUp+Q7UVXXveal1cpSNsrNKgX+cOJHNgjlpZXWGnUv6x5YTGlPWV4bvHIEeSctNNSUS1W9innInFHM27y+JrOXoCphQ6EL56xkgwA5tC+pBBNH7dCewuqyKlb5Wm53DBU15VBV7jttdPwO4rZKcbu31GkBQNLfN6C8H+0vowdKdyctVNSUQ1XRm+M1QZwvRGcfKbcjrUXWBABI5bKtns1eOARLZ1EGC8x5b1GQVNWrmIcj2NAWiTCkOu0LYQjx3RQECNYSt61OHMHG3UkLJTXlUFW3U8KoJRJxWqUosBw/AECwlgz/eUvZ9kKLtFvro1w5lahpPMwgZFFVp2IevIB6UpUNulbW6xcAkj2Jfcpn0L6zWye23O4YSmrKoapOxTzEYre1YEvFHrHwkwpR+mG5+Py9JUbKn1uyTMz/OC4WfbpW/GoxHJN2eKqcEjXNa2+RKVW1f/VVf3+/8uRF+TBCu3Lu3R0XjUdTonxeVVqBkHkfrWSDMfeD5WLBnDWZz+7cvC9tDG4LtErAohSnECdjYb/kb+IgaW9v1wJBBiN1qkOsW7adBYZd+QfqjiiVzwXh0qVLWV9QF6lvzWptbS3xAkGWzrZfpoCBMPPF+2Vp5SNkIXTJyr81PMp+LyGVSvXHivHSBcEJDFm4yp8BwScIJAgziPVYN7B+IHSZvqdWtCA0Nze/Y/raVFBC76nhZPpYsV7W5FMmr00FIXJvquWV8aIFAd9pgOP0CQing8pz5QFvvCAVK/ZLBsLr/YQghN5PmAFADUQq10DIAOBbSmY077JG5FqKeg1gApFUfZ1LEGLddyKMAPwPoJezn0KLrlsAAAAtdEVYdFNvZnR3YXJlAGJ5LmJsb29kZHkuY3J5cHRvLmltYWdlLlBORzI0RW5jb2RlcqgGf+4AAAAASUVORK5CYII=" });
+  KIMG.boss = Object.assign(new Image(), { src: "data:image/png;base64,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" });
+  const KENNEY = (g, h, r, t, upright) => {
+    const im = KIMG[h.id]; if (!im.complete || !im.naturalWidth) return;
+    if (!upright && h.kind === "ship") g.rotate(Math.PI / 2); // картинки кораблей смотрят вверх
+    if (!upright && h.kind === "crawler") g.rotate(-Math.PI / 2); // враги нарисованы «лицом» вниз
+    if (h.kind === "boss") g.rotate(t * 0.5);
+    const k = (r * 2.2) / Math.max(im.naturalWidth, im.naturalHeight), w = im.naturalWidth * k, hh = im.naturalHeight * k;
+    g.drawImage(im, -w / 2, -hh / 2, w, hh);
+  };
+  // ================= ОБЩЕЕ ДЛЯ НОВЫХ СТИЛЕЙ =================
+  // Буферы: фигура рисуется один раз за кадр во внеэкранный холст, потом копируется (как в самой игре)
+  const SC = 2;
+  let frameNo = 0;
+  const bufCache = new Map();
+  const buf = (key, size, paint) => {
+    let o = bufCache.get(key);
+    if (!o) { const c = document.createElement("canvas"); o = { c, g: c.getContext("2d"), f: -1 }; bufCache.set(key, o); }
+    if (o.f !== frameNo) {
+      const s = Math.ceil(size);
+      if (o.c.width !== s) { o.c.width = s; o.c.height = s; }
+      const b = o.g; b.setTransform(1, 0, 0, 1, 0, 0); b.globalCompositeOperation = "source-over"; b.globalAlpha = 1; b.filter = "none"; b.clearRect(0, 0, s, s);
+      b.translate(s / 2, s / 2); b.lineJoin = "round"; b.lineCap = "round";
+      paint(b, s); o.f = frameNo;
+    }
+    return o.c;
+  };
+  const blit = (g, c, w) => g.drawImage(c, -w / 2, -w / 2, w, w);
+
+  // ================= МУЛЬТЯШНЫЙ =================
+  const INK = "#151225";
+  const toon = (g, path, fill, r, shadeDir = 1) => {
+    g.fillStyle = fill; path(); g.fill();
+    g.save(); path(); g.clip(); g.fillStyle = dark(fill, 0.28); g.fillRect(-2 * r, shadeDir > 0 ? 0.08 * r : -2 * r, 4 * r, 2 * r); g.restore();
+    g.strokeStyle = INK; g.lineWidth = Math.max(2, r * 0.1); path(); g.stroke();
+  };
+  const eyeBall = (g, x, y, rr, look = 0, angry = false) => {
+    g.fillStyle = "#fff"; g.strokeStyle = INK; g.lineWidth = Math.max(1.4, rr * 0.28);
+    g.beginPath(); g.arc(x, y, rr, 0, TAU); g.fill(); g.stroke();
+    g.fillStyle = INK; g.beginPath(); g.arc(x + rr * 0.35 + look, y, rr * 0.5, 0, TAU); g.fill();
+    g.fillStyle = "#fff"; g.beginPath(); g.arc(x + rr * 0.5 + look, y - rr * 0.2, rr * 0.16, 0, TAU); g.fill();
+    if (angry) { g.strokeStyle = INK; g.lineWidth = Math.max(2, rr * 0.4); g.beginPath(); g.moveTo(x - rr * 1.1, y - rr * (y < 0 ? 1.5 : -1.5)); g.lineTo(x + rr * 1.0, y - rr * (y < 0 ? 0.9 : -0.9)); g.stroke(); }
+  };
+  const CARTOON = {
+    ship(g, h, r, t) {
+      const c = h.color, hull = HULLS[h.hull];
+      ENGINES[h.hull].forEach(([x, y], i) => {
+        const f = 0.55 + 0.12 * Math.sin(t * 30 + i);
+        g.fillStyle = "#fb923c"; g.beginPath(); g.ellipse((x - f / 2) * r, y * r, f / 2 * r, 0.13 * r, 0, 0, TAU); g.fill();
+        g.fillStyle = "#fde047"; g.beginPath(); g.ellipse((x - f / 4) * r, y * r, f / 4 * r, 0.07 * r, 0, 0, TAU); g.fill();
+      });
+      if (h.hull === "heavy") for (const s of [-1, 1]) {
+        toon(g, () => { g.beginPath(); g.roundRect(-0.58 * r, s * 0.72 * r - 0.15 * r, 0.8 * r, 0.3 * r, 0.12 * r); }, "#94a3b8", r);
+        g.fillStyle = "#ef4444"; g.beginPath(); g.arc(0.2 * r, s * 0.72 * r, 0.08 * r, 0, TAU); g.fill();
+      }
+      toon(g, () => pts(g, hull, r), c, r);
+      g.fillStyle = "rgba(255,255,255,.75)"; g.beginPath(); g.moveTo(0.7 * r, -0.04 * r); g.lineTo(-0.3 * r, -0.2 * r); g.lineTo(-0.3 * r, -0.12 * r); g.closePath(); g.fill();
+      if (h.hull === "assault") for (const s of [-1, 1]) toon(g, () => { g.beginPath(); g.roundRect(0.05 * r, s * 0.55 * r - 0.06 * r, 0.7 * r, 0.12 * r, 0.05 * r); }, "#64748b", r);
+      const cx = h.hull === "heavy" ? 0.55 : 0.36, rx = h.hull === "stealth" ? 0.3 : 0.26, ry = h.hull === "stealth" ? 0.09 : 0.15;
+      toon(g, () => { g.beginPath(); g.ellipse(cx * r, 0, rx * r, ry * r, 0, 0, TAU); }, "#7dd3fc", r);
+      g.fillStyle = "#fff"; g.beginPath(); g.ellipse((cx + 0.08) * r, -ry * 0.4 * r, rx * 0.3 * r, ry * 0.28 * r, 0, 0, TAU); g.fill();
+    },
+    drone(g, h, r, t) {
+      const c = h.color;
+      for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+        g.strokeStyle = INK; g.lineWidth = r * 0.24; g.beginPath(); g.moveTo(0, 0); g.lineTo(sx * r * 0.78, sy * r * 0.78); g.stroke();
+        g.strokeStyle = "#64748b"; g.lineWidth = r * 0.12; g.stroke();
+        const x = sx * r * 0.78, y = sy * r * 0.78;
+        g.fillStyle = "rgba(226,232,240,.55)"; g.strokeStyle = INK; g.lineWidth = Math.max(1.5, r * 0.07); g.beginPath(); g.arc(x, y, r * 0.34, 0, TAU); g.fill(); g.stroke();
+        const a = t * 22 * sx; g.strokeStyle = INK; g.lineWidth = Math.max(1.5, r * 0.08);
+        g.beginPath(); g.moveTo(x + Math.cos(a) * r * 0.3, y + Math.sin(a) * r * 0.3); g.lineTo(x - Math.cos(a) * r * 0.3, y - Math.sin(a) * r * 0.3); g.stroke();
+      }
+      toon(g, () => { g.beginPath(); g.arc(0, 0, r * 0.52, 0, TAU); }, c, r);
+      eyeBall(g, 0.05 * r, -0.03 * r, r * 0.26, Math.sin(t * 2) * r * 0.05);
+    },
+    crawler(g, h, r, t) {
+      const c = h.color;
+      for (let i = 0; i < 3; i++) for (const s of [-1, 1]) {
+        const base = (-0.6 + i * 0.6), swing = Math.sin(t * 12 + i * 2.1 + (s > 0 ? Math.PI : 0)) * 0.28;
+        const a1 = s * (Math.PI / 2 + base * 0.9 + swing), kx = Math.cos(a1) * r * 0.72, ky = Math.sin(a1) * r * 0.72;
+        const ex = kx + Math.cos(a1 - s * 0.9) * r * 0.46, ey = ky + Math.sin(a1 - s * 0.9) * r * 0.46;
+        g.strokeStyle = INK; g.lineWidth = r * 0.2; g.beginPath(); g.moveTo(0, 0); g.lineTo(kx, ky); g.lineTo(ex, ey); g.stroke();
+        g.strokeStyle = dark(c, 0.3); g.lineWidth = r * 0.1; g.stroke();
+      }
+      for (const [x, rx, ry] of [[-0.5, 0.44, 0.38], [0, 0.33, 0.31], [0.43, 0.29, 0.28]]) toon(g, () => { g.beginPath(); g.ellipse(x * r, 0, rx * r, ry * r, 0, 0, TAU); }, c, r);
+      for (const s of [-1, 1]) eyeBall(g, 0.5 * r, s * 0.12 * r, r * 0.11);
+    },
+    brute(g, h, r, t) {
+      const c = h.color, rot = t * 0.6;
+      for (let i = 0; i < 10; i++) {
+        const a = rot + (i / 10) * TAU;
+        toon(g, () => { g.beginPath(); g.moveTo(Math.cos(a - 0.17) * r * 0.74, Math.sin(a - 0.17) * r * 0.74); g.lineTo(Math.cos(a) * r * 1.08, Math.sin(a) * r * 1.08); g.lineTo(Math.cos(a + 0.17) * r * 0.74, Math.sin(a + 0.17) * r * 0.74); g.closePath(); }, "#e2e8f0", r * 0.6);
+      }
+      toon(g, () => { g.beginPath(); g.roundRect(-r * 0.75, -r * 0.75, r * 1.5, r * 1.5, r * 0.4); }, c, r);
+      for (const s of [-1, 1]) eyeBall(g, s * 0.26 * r, -0.12 * r, r * 0.17, 0, true);
+      g.strokeStyle = INK; g.lineWidth = r * 0.08; g.beginPath(); g.moveTo(-0.3 * r, 0.32 * r); g.quadraticCurveTo(0, 0.18 * r, 0.3 * r, 0.32 * r); g.stroke();
+    },
+    boss(g, h, r, t) {
+      const c = h.color, rot = t * 0.35;
+      toon(g, () => poly(g, 6, r, Math.PI / 6), c, r);
+      toon(g, () => poly(g, 6, r * 0.72, Math.PI / 6), dark(c, 0.15), r);
+      for (let i = 0; i < 6; i++) {
+        const a = rot + (i / 6) * TAU; g.save(); g.translate(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55); g.rotate(a);
+        toon(g, () => { g.beginPath(); g.roundRect(r * 0.04, -r * 0.035, r * 0.2, r * 0.07, r * 0.02); }, "#475569", r * 0.5);
+        toon(g, () => { g.beginPath(); g.arc(0, 0, r * 0.1, 0, TAU); }, "#94a3b8", r * 0.5); g.restore();
+      }
+      toon(g, () => { g.beginPath(); g.arc(0, 0, r * 0.3, 0, TAU); }, "#38bdf8", r);
+      g.fillStyle = "#fff"; g.beginPath(); g.ellipse(-0.1 * r, -0.12 * r, 0.1 * r, 0.06 * r, -0.5, 0, TAU); g.fill();
+    },
+  };
+
+  // ================= LOW-POLY =================
+  const LIGHT_A = -2.3; // свет сверху-слева
+  const shadeTri = (g, c, ax, ay, bx, by, cx, cy, k) => {
+    const col = mix(dark(c, 0.6), light(c, 0.4), Math.max(0, Math.min(1, k)));
+    g.fillStyle = col; g.strokeStyle = col; g.lineWidth = 0.6;
+    g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.lineTo(cx, cy); g.closePath(); g.fill(); g.stroke();
+  };
+  // Гранёная фигура: внешний контур + внутренний (приподнятый) — треугольники освещаются по направлению грани
+  const gem = (g, P, c, inner = 0.45, cx = 0, cy = 0) => {
+    const n = P.length, I = P.map(([x, y]) => [cx + (x - cx) * inner, cy + (y - cy) * inner]);
+    for (let i = 0; i < n; i++) {
+      const a = P[i], b = P[(i + 1) % n], ia = I[i], ib = I[(i + 1) % n];
+      const mid = Math.atan2((a[1] + b[1]) / 2 - cy, (a[0] + b[0]) / 2 - cx);
+      const k = 0.5 + 0.5 * Math.cos(mid - LIGHT_A);
+      shadeTri(g, c, a[0], a[1], b[0], b[1], ib[0], ib[1], k * 0.85);
+      shadeTri(g, c, a[0], a[1], ib[0], ib[1], ia[0], ia[1], k * 0.85 + 0.08);
+      shadeTri(g, c, cx, cy, ia[0], ia[1], ib[0], ib[1], 0.55 + 0.35 * k);
+    }
+  };
+  const ngon = (n, rx, ry, x = 0, y = 0, rot = 0) => Array.from({ length: n }, (_, i) => { const a = rot + (i / n) * TAU; return [x + Math.cos(a) * rx, y + Math.sin(a) * ry]; });
+  const LOWPOLY = {
+    ship(g, h, r, t) {
+      const c = h.color;
+      ENGINES[h.hull].forEach(([x, y], i) => engineGlow(g, (x - 0.1) * r, y * r, r * 0.32, c, t, i * 2));
+      if (h.hull === "heavy") for (const s of [-1, 1]) gem(g, [[-0.58 * r, s * 0.58 * r], [0.22 * r, s * 0.6 * r], [0.25 * r, s * 0.86 * r], [-0.58 * r, s * 0.86 * r]], "#94a3b8", 0.4, -0.18 * r, s * 0.72 * r);
+      gem(g, HULLS[h.hull].map(([x, y]) => [x * r, y * r]), c, 0.35, 0.15 * r, 0);
+      const cx = h.hull === "heavy" ? 0.55 : 0.36;
+      gem(g, ngon(6, (h.hull === "stealth" ? 0.3 : 0.24) * r, (h.hull === "stealth" ? 0.07 : 0.12) * r, cx * r, 0), "#7dd3fc", 0.3, cx * r, 0);
+    },
+    drone(g, h, r, t) {
+      const c = h.color;
+      for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+        g.strokeStyle = "#475569"; g.lineWidth = r * 0.12; g.beginPath(); g.moveTo(0, 0); g.lineTo(sx * r * 0.75, sy * r * 0.75); g.stroke();
+        gem(g, ngon(3, r * 0.36, r * 0.36, sx * r * 0.78, sy * r * 0.78, t * 18 * sx), "#94a3b8", 0.2, sx * r * 0.78, sy * r * 0.78);
+      }
+      gem(g, ngon(4, r * 0.62, r * 0.62, 0, 0, Math.PI / 4), c, 0.4);
+      const p = 0.5 + 0.5 * Math.sin(t * 6); g.save(); g.globalCompositeOperation = "lighter";
+      const e = g.createRadialGradient(0, 0, 0, 0, 0, r * 0.3); e.addColorStop(0, "#fff"); e.addColorStop(1, rgba(c, 0)); g.fillStyle = e; g.beginPath(); g.arc(0, 0, r * (0.2 + p * 0.08), 0, TAU); g.fill(); g.restore();
+    },
+    crawler(g, h, r, t) {
+      const c = h.color;
+      for (let i = 0; i < 3; i++) for (const s of [-1, 1]) {
+        const base = (-0.6 + i * 0.6), swing = Math.sin(t * 12 + i * 2.1 + (s > 0 ? Math.PI : 0)) * 0.28;
+        const a1 = s * (Math.PI / 2 + base * 0.9 + swing), kx = Math.cos(a1) * r * 0.72, ky = Math.sin(a1) * r * 0.72;
+        g.strokeStyle = dark(c, 0.55); g.lineWidth = r * 0.11; g.beginPath(); g.moveTo(0, 0); g.lineTo(kx, ky); g.lineTo(kx + Math.cos(a1 - s * 0.9) * r * 0.46, ky + Math.sin(a1 - s * 0.9) * r * 0.46); g.stroke();
+      }
+      gem(g, ngon(7, r * 0.44, r * 0.38, -0.5 * r, 0), c, 0.4, -0.5 * r, 0);
+      gem(g, ngon(6, r * 0.33, r * 0.31, 0, 0), c, 0.4);
+      gem(g, ngon(6, r * 0.29, r * 0.27, 0.43 * r, 0), c, 0.4, 0.43 * r, 0);
+      g.fillStyle = "#fde047"; for (const s of [-1, 1]) { g.beginPath(); g.moveTo(0.58 * r, s * 0.06 * r); g.lineTo(0.5 * r, s * 0.17 * r); g.lineTo(0.45 * r, s * 0.08 * r); g.closePath(); g.fill(); }
+    },
+    brute(g, h, r, t) {
+      const c = h.color, rot = t * 0.6;
+      for (let i = 0; i < 10; i++) {
+        const a = rot + (i / 10) * TAU, A = [Math.cos(a - 0.17) * r * 0.74, Math.sin(a - 0.17) * r * 0.74], B = [Math.cos(a + 0.17) * r * 0.74, Math.sin(a + 0.17) * r * 0.74], T = [Math.cos(a) * r * 1.08, Math.sin(a) * r * 1.08];
+        const k = 0.5 + 0.5 * Math.cos(a - LIGHT_A);
+        shadeTri(g, "#cbd5e1", A[0], A[1], T[0], T[1], Math.cos(a) * r * 0.74, Math.sin(a) * r * 0.74, k);
+        shadeTri(g, "#cbd5e1", B[0], B[1], T[0], T[1], Math.cos(a) * r * 0.74, Math.sin(a) * r * 0.74, k * 0.6);
+      }
+      gem(g, ngon(8, r * 0.82, r * 0.82, 0, 0, Math.PI / 8), c, 0.42);
+      const p = 0.5 + 0.5 * Math.sin(t * 4); g.save(); g.globalCompositeOperation = "lighter";
+      const e = g.createRadialGradient(0, 0, 0, 0, 0, r * 0.4); e.addColorStop(0, "#fff"); e.addColorStop(0.3, light(c, 0.2)); e.addColorStop(1, rgba(c, 0)); g.fillStyle = e; g.beginPath(); g.arc(0, 0, r * (0.26 + p * 0.08), 0, TAU); g.fill(); g.restore();
+    },
+    boss(g, h, r, t) {
+      const c = h.color, rot = t * 0.35;
+      gem(g, ngon(6, r, r, 0, 0, Math.PI / 6), "#64748b", 0.78);
+      gem(g, ngon(12, r * 0.66, r * 0.66, 0, 0, rot), c, 0.62);
+      for (let i = 0; i < 6; i++) { const a = rot + (i / 6) * TAU; gem(g, ngon(4, r * 0.11, r * 0.11, Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, a + Math.PI / 4), "#94a3b8", 0.3, Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55); }
+      const p = 0.5 + 0.5 * Math.sin(t * 3); g.save(); g.globalCompositeOperation = "lighter";
+      const e = g.createRadialGradient(0, 0, 0, 0, 0, r * 0.4); e.addColorStop(0, "#fff"); e.addColorStop(0.3, light(c, 0.1)); e.addColorStop(1, rgba(c, 0)); g.fillStyle = e; g.beginPath(); g.arc(0, 0, r * (0.28 + p * 0.08), 0, TAU); g.fill(); g.restore();
+    },
+  };
+
+  // ================= ГОЛОГРАММА / ГЛИТЧ =================
+  const HOLO_C = "#67e8f9";
+  const HOLO = (g, h, r, t) => {
+    const S = r * 2.9, key = `${h.id}|${r}`;
+    const base = buf("hb|" + key, S * SC, (b) => { b.scale(SC, SC); NEON[h.kind](b, h, r, t); });
+    const tint = buf("ht|" + key, S * SC, (b, s) => {
+      b.setTransform(1, 0, 0, 1, 0, 0); b.drawImage(base, 0, 0);
+      b.globalCompositeOperation = "source-atop"; b.fillStyle = HOLO_C; b.fillRect(0, 0, s, s);
+      b.globalCompositeOperation = "destination-out"; b.fillStyle = "#000";
+      for (let y = ((t * 30 * SC) % (4 * SC)); y < s; y += 4 * SC) b.fillRect(0, y, s, 1.5 * SC);
+    });
+    const seed = h.id.length * 1.7 + r, glitch = Math.sin(t * 2.3 + seed) > 0.93;
+    const flick = 0.72 + 0.18 * Math.sin(t * 31 + seed) + (Math.sin(t * 7.7 + seed) > 0.97 ? -0.4 : 0);
+    g.save(); g.globalCompositeOperation = "lighter";
+    g.globalAlpha = 0.35; g.drawImage(base, -S / 2 - 2, -S / 2, S, S);
+    g.globalAlpha = 0.25; g.drawImage(tint, -S / 2 + 2, -S / 2 + 1, S, S);
+    g.globalAlpha = Math.max(0.2, flick);
+    if (glitch) {
+      const sh = S / 6; for (let k = 0; k < 6; k++) { const off = (k % 2 ? 1 : -1) * r * 0.18 * Math.sin(t * 50 + k); g.drawImage(tint, 0, (k * sh / S) * tint.height, tint.width, (sh / S) * tint.height, -S / 2 + off, -S / 2 + k * sh, S, sh); }
+    } else g.drawImage(tint, -S / 2, -S / 2, S, S);
+    g.restore();
+  };
+
+  // ================= СИЛУЭТЫ С ПОДСВЕТКОЙ =================
+  const SIL = (g, h, r, t) => {
+    const S = r * 2.9, key = `${h.id}|${r}`;
+    const shape = buf("ss|" + key, S * SC, (b) => { b.scale(SC, SC); NOSHADOW = true; VOLUME[h.kind](b, h, r, t); NOSHADOW = false; });
+    const rim = buf("sr|" + key, S * SC, (b, s) => { b.setTransform(1, 0, 0, 1, 0, 0); b.drawImage(shape, 0, 0); b.globalCompositeOperation = "source-atop"; b.fillStyle = light(h.color, 0.25); b.fillRect(0, 0, s, s); });
+    const mask = buf("sm|" + key, S * SC, (b, s) => { b.setTransform(1, 0, 0, 1, 0, 0); b.drawImage(shape, 0, 0); b.globalCompositeOperation = "source-atop"; b.fillStyle = "#06070d"; b.fillRect(0, 0, s, s); });
+    const o = Math.max(1.2, r * 0.07);
+    g.save(); g.shadowColor = h.color; g.shadowBlur = r * 0.5; g.drawImage(rim, -S / 2 - o, -S / 2 - o, S, S); g.restore();
+    g.drawImage(mask, -S / 2, -S / 2, S, S);
+    // светятся только глаза, ядра и двигатели
+    const c = h.color, p = 0.5 + 0.5 * Math.sin(t * 5);
+    const spot = (x, y, rr, col) => { g.save(); g.globalCompositeOperation = "lighter"; const e = g.createRadialGradient(x, y, 0, x, y, rr); e.addColorStop(0, "#fff"); e.addColorStop(0.35, col); e.addColorStop(1, rgba(col, 0)); g.fillStyle = e; g.beginPath(); g.arc(x, y, rr, 0, TAU); g.fill(); g.restore(); };
+    if (h.kind === "ship") ENGINES[h.hull].forEach(([x, y]) => spot((x - 0.05) * r, y * r, r * 0.28, c));
+    if (h.kind === "drone") spot(0, 0, r * (0.25 + p * 0.08), c);
+    if (h.kind === "crawler") for (const s of [-1, 1]) spot(0.52 * r, s * 0.11 * r, r * 0.12, "#facc15");
+    if (h.kind === "brute") spot(0, 0, r * (0.3 + p * 0.08), c);
+    if (h.kind === "boss") spot(0, 0, r * (0.3 + p * 0.06), c);
+  };
+
+  // ================= ЧЕРТЁЖ =================
+  const BP = "#e0f2fe";
+  const bpBackground = (g, x, y, w, hgt, step) => {
+    g.fillStyle = "#0c3866"; g.fillRect(x, y, w, hgt);
+    g.strokeStyle = "rgba(186,230,253,.12)"; g.lineWidth = 1; g.beginPath();
+    for (let i = x; i <= x + w; i += step) { g.moveTo(i, y); g.lineTo(i, y + hgt); }
+    for (let j = y; j <= y + hgt; j += step) { g.moveTo(x, j); g.lineTo(x + w, j); }
+    g.stroke();
+  };
+  const dim = (g, x1, y1, x2, y2, label) => {
+    g.strokeStyle = "rgba(224,242,254,.7)"; g.lineWidth = 0.8; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+    const a = Math.atan2(y2 - y1, x2 - x1);
+    for (const [x, y, d] of [[x1, y1, 1], [x2, y2, -1]]) { g.beginPath(); g.moveTo(x, y); g.lineTo(x + d * Math.cos(a - 0.4) * 5, y + d * Math.sin(a - 0.4) * 5); g.moveTo(x, y); g.lineTo(x + d * Math.cos(a + 0.4) * 5, y + d * Math.sin(a + 0.4) * 5); g.stroke(); }
+    g.fillStyle = BP; g.font = '500 8px "Exo 2", monospace'; g.textAlign = "center"; g.fillText(label, (x1 + x2) / 2, (y1 + y2) / 2 - 3);
+  };
+  const BLUEPRINT = (g, h, r, t, upright, annotate) => {
+    g.strokeStyle = BP; g.lineWidth = Math.max(0.9, r * 0.035); g.fillStyle = "rgba(224,242,254,.06)";
+    const c = h.color;
+    if (h.kind === "ship") {
+      pts(g, HULLS[h.hull], r); g.fill(); g.stroke();
+      g.setLineDash([6, 3, 1, 3]); g.lineWidth = 0.7; g.beginPath(); g.moveTo(1.4 * r, 0); g.lineTo(-1.1 * r, 0); g.stroke(); g.setLineDash([]); g.lineWidth = Math.max(0.9, r * 0.035);
+      const cx = h.hull === "heavy" ? 0.55 : 0.36; g.beginPath(); g.ellipse(cx * r, 0, 0.25 * r, (h.hull === "stealth" ? 0.07 : 0.13) * r, 0, 0, TAU); g.stroke();
+      ENGINES[h.hull].forEach(([x, y]) => g.strokeRect((x - 0.12) * r, (y - 0.06) * r, 0.14 * r, 0.12 * r));
+      if (h.hull === "heavy") for (const s of [-1, 1]) g.strokeRect(-0.58 * r, s * 0.72 * r - 0.15 * r, 0.8 * r, 0.3 * r);
+    } else if (h.kind === "drone") {
+      pts(g, [[0, -0.62], [0.62, 0], [0, 0.62], [-0.62, 0]], r); g.fill(); g.stroke();
+      for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+        const x = sx * r * 0.78, y = sy * r * 0.78, a = t * 4 * sx; g.beginPath(); g.arc(x, y, r * 0.34, 0, TAU); g.stroke();
+        g.beginPath(); g.moveTo(x + Math.cos(a) * r * 0.34, y + Math.sin(a) * r * 0.34); g.lineTo(x - Math.cos(a) * r * 0.34, y - Math.sin(a) * r * 0.34); g.stroke();
+      }
+      g.beginPath(); g.arc(0, 0, r * 0.2, 0, TAU); g.stroke();
+    } else if (h.kind === "crawler") {
+      for (let i = 0; i < 3; i++) for (const s of [-1, 1]) { const a1 = s * (Math.PI / 2 + (-0.6 + i * 0.6) * 0.9 + Math.sin(t * 3 + i) * 0.1), kx = Math.cos(a1) * r * 0.72, ky = Math.sin(a1) * r * 0.72; g.beginPath(); g.moveTo(0, 0); g.lineTo(kx, ky); g.lineTo(kx + Math.cos(a1 - s * 0.9) * r * 0.46, ky + Math.sin(a1 - s * 0.9) * r * 0.46); g.stroke(); g.beginPath(); g.arc(kx, ky, 1.6, 0, TAU); g.stroke(); }
+      for (const [x, rx, ry] of [[-0.5, 0.44, 0.38], [0, 0.33, 0.31], [0.43, 0.29, 0.28]]) { g.beginPath(); g.ellipse(x * r, 0, rx * r, ry * r, 0, 0, TAU); g.fill(); g.stroke(); }
+    } else if (h.kind === "brute") {
+      const rot = t * 0.3; for (let i = 0; i < 10; i++) { const a = rot + (i / 10) * TAU; g.beginPath(); g.moveTo(Math.cos(a - 0.17) * r * 0.75, Math.sin(a - 0.17) * r * 0.75); g.lineTo(Math.cos(a) * r * 1.08, Math.sin(a) * r * 1.08); g.lineTo(Math.cos(a + 0.17) * r * 0.75, Math.sin(a + 0.17) * r * 0.75); g.stroke(); }
+      g.beginPath(); g.roundRect(-r * 0.74, -r * 0.74, r * 1.48, r * 1.48, r * 0.36); g.fill(); g.stroke(); g.beginPath(); g.arc(0, 0, r * 0.26, 0, TAU); g.stroke();
+    } else {
+      const rot = t * 0.2; poly(g, 6, r, Math.PI / 6); g.fill(); g.stroke(); poly(g, 6, r * 0.82, Math.PI / 6); g.stroke();
+      g.beginPath(); g.arc(0, 0, r * 0.55, 0, TAU); g.stroke();
+      for (let i = 0; i < 6; i++) { const a = rot + (i / 6) * TAU; g.save(); g.translate(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55); g.rotate(a); g.strokeRect(-r * 0.09, -r * 0.09, r * 0.18, r * 0.18); g.beginPath(); g.moveTo(r * 0.09, 0); g.lineTo(r * 0.25, 0); g.stroke(); g.restore(); }
+      g.beginPath(); g.arc(0, 0, r * 0.3, 0, TAU); g.stroke();
+    }
+    // хитбокс — настоящий радиус столкновения из игры
+    g.strokeStyle = rgba(c, 0.85); g.lineWidth = 0.8; g.setLineDash([3, 3]); g.beginPath(); g.arc(0, 0, r, 0, TAU); g.stroke(); g.setLineDash([]);
+    if (annotate) {
+      g.save(); if (h.kind === "ship" || h.kind === "crawler") g.rotate(Math.PI / 2);
+      dim(g, -r, r * 1.18, r, r * 1.18, `хитбокс Ø ${h.r * 2} px`);
+      g.restore();
+    }
+  };
+
+  // ================= НАСТОЯЩЕЕ 3D (three.js) =================
+  let T3 = null;
+  const init3D = () => {
+    if (T3 !== null) return T3;
+    if (!window.THREE) { T3 = false; return T3; }
+    const THREE = window.THREE;
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(1); renderer.setSize(256, 256, false); renderer.setClearColor(0x000000, 0);
+    const scene = new THREE.Scene();
+    const cam = new THREE.OrthographicCamera(-1.35, 1.35, 1.35, -1.35, 0.1, 30);
+    cam.position.set(0, -2.6, 5); cam.lookAt(0, 0, 0);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.15); sun.position.set(-3, 4, 6); scene.add(sun);
+    const rimL = new THREE.DirectionalLight(0x88ccff, 0.45); rimL.position.set(3, -2, 2); scene.add(rimL);
+    const col = (c) => new THREE.Color(c);
+    const metalM = (c, m = 0.55, rough = 0.35) => new THREE.MeshStandardMaterial({ color: col(c), metalness: m, roughness: rough });
+    const glowM = (c) => new THREE.MeshStandardMaterial({ color: col(c), emissive: col(c), emissiveIntensity: 1.4 });
+    const shapeOf = (list) => { const s = new THREE.Shape(); list.forEach(([x, y], i) => (i ? s.lineTo(x, -y) : s.moveTo(x, -y))); s.closePath(); return s; };
+    const extrude = (shape, depth, bevel = 0.04) => { const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2 }); geo.translate(0, 0, -depth / 2); return geo; };
+    const models = {};
+    const anim = {};
+    for (const h of HEROES) {
+      const grp = new THREE.Group(); const c = h.color; const A = {};
+      if (h.kind === "ship") {
+        grp.add(new THREE.Mesh(extrude(shapeOf(HULLS[h.hull]), h.hull === "heavy" ? 0.22 : 0.14), metalM(mix("#cbd5e1", c, 0.35))));
+        const stripe = new THREE.Mesh(extrude(shapeOf(HULLS[h.hull].map(([x, y]) => [x * 0.7 - 0.12, y * 0.55])), 0.05, 0.01), metalM(c, 0.3, 0.4)); stripe.position.z = h.hull === "heavy" ? 0.13 : 0.09; grp.add(stripe);
+        const cx = h.hull === "heavy" ? 0.55 : 0.36;
+        const glass = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), new THREE.MeshStandardMaterial({ color: col(light(c, 0.35)), metalness: 0.1, roughness: 0.05, emissive: col(c), emissiveIntensity: 0.25 }));
+        glass.scale.set(h.hull === "stealth" ? 0.3 : 0.24, h.hull === "stealth" ? 0.07 : 0.12, 0.12); glass.position.set(cx, 0, 0.12); grp.add(glass);
+        if (h.hull === "heavy") for (const s of [-1, 1]) { const pod = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.8, 16), metalM("#94a3b8")); pod.rotation.z = Math.PI / 2; pod.position.set(-0.18, s * 0.72, 0.05); grp.add(pod); const tip = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.22, 16), metalM("#ef4444", 0.3)); tip.rotation.z = -Math.PI / 2; tip.position.set(0.33, s * 0.72, 0.05); grp.add(tip); }
+        A.flames = ENGINES[h.hull].map(([x, y]) => { const f = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.5, 12), glowM(light(c, 0.2))); f.rotation.z = Math.PI / 2; f.position.set(x - 0.25, -y, 0); grp.add(f); return f; });
+      } else if (h.kind === "drone") {
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 24, 16), metalM("#94a3b8")); grp.add(body);
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), glowM(c)); eye.position.z = 0.38; grp.add(eye); A.eye = eye;
+        A.rotors = [];
+        for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+          const arm = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.1, 0.08), metalM("#475569")); arm.rotation.z = Math.atan2(sy, sx); arm.position.set(sx * 0.4, sy * 0.4, 0); grp.add(arm);
+          const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.02, 24), new THREE.MeshStandardMaterial({ color: 0xcbd5e1, transparent: true, opacity: 0.25 })); disc.rotation.x = Math.PI / 2; disc.position.set(sx * 0.78, sy * 0.78, 0.08); grp.add(disc);
+          const blade = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.06, 0.02), metalM("#e2e8f0")); blade.position.set(sx * 0.78, sy * 0.78, 0.1); grp.add(blade); A.rotors.push([blade, sx]);
+        }
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.04, 8, 32), metalM(c, 0.4)); ring.position.z = 0.2; grp.add(ring);
+      } else if (h.kind === "crawler") {
+        for (const [x, rx, ry] of [[-0.5, 0.44, 0.38], [0, 0.33, 0.31], [0.43, 0.29, 0.28]]) { const s = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), metalM(c, 0.15, 0.45)); s.scale.set(rx, ry, Math.min(rx, ry) * 0.8); s.position.x = x; grp.add(s); }
+        for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8), glowM("#facc15")); e.position.set(0.55, s * 0.11, 0.18); grp.add(e); }
+        A.legs = [];
+        for (let i = 0; i < 3; i++) for (const s of [-1, 1]) {
+          const leg = new THREE.Group(); const up = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.72, 8), metalM(dark(c, 0.5), 0.2)); up.position.y = 0.36; leg.add(up);
+          const knee = new THREE.Group(); knee.position.y = 0.72; const low = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.02, 0.46, 8), metalM(dark(c, 0.4), 0.2)); low.position.y = 0.23; knee.add(low); knee.rotation.z = s * 0.9; leg.add(knee);
+          grp.add(leg); A.legs.push([leg, i, s]);
+        }
+      } else if (h.kind === "brute") {
+        const rr = new THREE.Shape(); const R = 0.74, q = 0.36; rr.moveTo(-R + q, -R); rr.lineTo(R - q, -R); rr.quadraticCurveTo(R, -R, R, -R + q); rr.lineTo(R, R - q); rr.quadraticCurveTo(R, R, R - q, R); rr.lineTo(-R + q, R); rr.quadraticCurveTo(-R, R, -R, R - q); rr.lineTo(-R, -R + q); rr.quadraticCurveTo(-R, -R, -R + q, -R);
+        grp.add(new THREE.Mesh(extrude(rr, 0.45, 0.1), metalM(c, 0.25, 0.5)));
+        const core = new THREE.Mesh(new THREE.SphereGeometry(0.26, 20, 14), glowM(c)); core.position.z = 0.3; grp.add(core); A.core = core;
+        const spikes = new THREE.Group();
+        for (let i = 0; i < 10; i++) { const a = (i / 10) * TAU; const sp = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.42, 10), metalM("#f1f5f9", 0.5, 0.3)); sp.position.set(Math.cos(a) * 1.02, Math.sin(a) * 1.02, 0.05); sp.rotation.z = a - Math.PI / 2; spikes.add(sp); }
+        grp.add(spikes); A.spikes = spikes;
+      } else {
+        const hex = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.32, 6), metalM("#64748b", 0.7, 0.3)); hex.rotation.x = Math.PI / 2; grp.add(hex);
+        const top = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.82, 0.1, 6), metalM(c, 0.45, 0.35)); top.rotation.x = Math.PI / 2; top.position.z = 0.2; grp.add(top);
+        const turrets = new THREE.Group();
+        for (let i = 0; i < 6; i++) { const a = (i / 6) * TAU; const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.14, 12), metalM("#cbd5e1")); tb.rotation.x = Math.PI / 2; tb.position.set(Math.cos(a) * 0.55, Math.sin(a) * 0.55, 0.3); turrets.add(tb); const br = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.05, 0.05), metalM("#334155")); br.position.set(Math.cos(a) * 0.72, Math.sin(a) * 0.72, 0.32); br.rotation.z = a; turrets.add(br); }
+        grp.add(turrets); A.turrets = turrets;
+        const core = new THREE.Mesh(new THREE.SphereGeometry(0.28, 24, 16), glowM(c)); core.position.z = 0.3; grp.add(core); A.core = core;
+      }
+      grp.visible = false; scene.add(grp); models[h.id] = grp; anim[h.id] = A;
+    }
+    T3 = { renderer, scene, cam, models, anim };
+    return T3;
+  };
+  const render3D = (h, t) => {
+    const T = init3D(); if (!T) return null;
+    return buf("3d|" + h.id, 256, (b, s) => {
+      const A = T.anim[h.id];
+      if (A.flames) A.flames.forEach((f, i) => { const k = 0.8 + 0.25 * Math.sin(t * 35 + i); f.scale.set(1, k, 1); });
+      if (A.rotors) A.rotors.forEach(([bl, sx]) => (bl.rotation.z = t * 22 * sx));
+      if (A.eye) A.eye.scale.setScalar(0.9 + 0.2 * Math.sin(t * 6));
+      if (A.legs) A.legs.forEach(([leg, i, s]) => { const base = -0.6 + i * 0.6, swing = Math.sin(t * 12 + i * 2.1 + (s > 0 ? Math.PI : 0)) * 0.28; leg.rotation.z = -(s * (Math.PI / 2 + base * 0.9 + swing)) - Math.PI / 2; });
+      if (A.spikes) A.spikes.rotation.z = t * 0.6;
+      if (A.turrets) A.turrets.rotation.z = t * 0.35;
+      if (A.core) A.core.scale.setScalar(0.9 + 0.15 * Math.sin(t * 3));
+      for (const id in T.models) T.models[id].visible = id === h.id;
+      T.renderer.render(T.scene, T.cam);
+      b.setTransform(1, 0, 0, 1, 0, 0); b.drawImage(T.renderer.domElement, 0, 0, s, s);
+    });
+  };
+  const THREED = (g, h, r, t) => {
+    const img = render3D(h, t);
+    if (!img) { if (r > 30) { g.fillStyle = "#8a96b3"; g.font = '12px "Exo 2", sans-serif'; g.textAlign = "center"; g.fillText("3D не загрузилось", 0, 4); } return; }
+    blit(g, img, r * 2.7);
+  };
+  const STYLES = {
+    now: (g, h, r, t) => NOW[h.kind](g, h, r, t),
+    neon: (g, h, r, t) => NEON[h.kind](g, h, r, t),
+    volume: (g, h, r, t) => VOLUME[h.kind](g, h, r, t),
+    pixel: (g, h, r, t, upright) => PIXEL.any(g, h, r, t, upright),
+    kenney: KENNEY,
+    cartoon: (g, h, r, t) => CARTOON[h.kind](g, h, r, t),
+    lowpoly: (g, h, r, t) => LOWPOLY[h.kind](g, h, r, t),
+    holo: HOLO,
+    silhouette: SIL,
+    blueprint: (g, h, r, t, up) => BLUEPRINT(g, h, r, t, up, up),
+    three: THREED,
+  };
+
+  // ---------- тайлы ----------
+  const tiles = [];
+  document.querySelectorAll(".style[data-style]").forEach((sec) => {
+    const style = sec.dataset.style, box = sec.querySelector(".tiles");
+    HEROES.forEach((h) => {
+      const el = document.createElement("div"); el.className = "tile";
+      const cv = document.createElement("canvas"); cv.width = 132 * 2; cv.height = 132 * 2;
+      cv.setAttribute("role", "img"); cv.setAttribute("aria-label", `${h.name}, стиль ${sec.querySelector("h2").textContent}`);
+      el.append(cv);
+      const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = h.name; nm.style.color = h.color; el.append(nm);
+      const sb = document.createElement("div"); sb.className = "sub"; sb.textContent = h.sub; el.append(sb);
+      box.append(el);
+      tiles.push({ cv, g: cv.getContext("2d"), style, h });
+    });
+    const sc = sec.querySelector(".scene");
+    if (sc) tiles.push({ scene: true, cv: sc, g: sc.getContext("2d"), style });
+  });
+
+  const drawTile = (o, t) => {
+    const { g, cv, style, h } = o;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
+    if (style === "blueprint") bpBackground(g, 0, 0, cv.width, cv.height, 24);
+    g.setTransform(2, 0, 0, 2, 66 * 2, 66 * 2);
+    g.lineJoin = "round"; g.lineCap = "round";
+    const R = TILE_R[h.kind];
+    const upright = style === "pixel" || style === "kenney"; // эти стили нарисованы «носом вверх»
+    if ((h.kind === "ship" || h.kind === "crawler") && !upright) g.rotate(-Math.PI / 2);
+    STYLES[style](g, h, R, t, true);
+  };
+
+  // ---------- сцена в игровом масштабе ----------
+  const SCENE_ENEMIES = [];
+  for (let i = 0; i < 9; i++) SCENE_ENEMIES.push({ h: HEROES[i % 3 === 0 ? 4 : 3], a: (i / 9) * TAU, rad: 95 + (i % 3) * 28, sp: 0.35 + (i % 4) * 0.07 });
+  const drawScene = (o, t) => {
+    const { cv, g, style } = o;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2), W = cv.clientWidth, H = cv.clientHeight;
+    if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = "#060814"; g.fillRect(0, 0, W, H);
+    if (style === "blueprint") bpBackground(g, 0, 0, W, H, 32);
+    g.strokeStyle = "rgba(56,189,248,0.075)"; g.lineWidth = 1; g.beginPath();
+    const ox = (t * 18) % 64; for (let x = -ox; x < W; x += 64) { g.moveTo(x, 0); g.lineTo(x, H); } for (let y = 0; y < H; y += 64) { g.moveTo(0, y); g.lineTo(W, y); } g.stroke();
+    g.lineJoin = "round"; g.lineCap = "round";
+    const cx = Math.min(W * 0.32, 220), cy = H / 2;
+    const draw = (h, x, y, rot, r) => { g.save(); g.translate(x, y); g.rotate(rot); STYLES[style](g, h, r, t, false); g.restore(); };
+    // босс справа, голем, враги вокруг корабля, корабли пилотов
+    if (W > 520) draw(HEROES[6], W - 90, cy, 0, Math.min(58, H * 0.36));
+    draw(HEROES[5], cx + 210 > W - 170 ? W * 0.62 : cx + 210, cy - 20 + Math.sin(t * 0.8) * 12, 0, 30);
+    for (const e of SCENE_ENEMIES) {
+      const a = e.a + t * e.sp, x = cx + Math.cos(a) * e.rad, y = cy + Math.sin(a) * e.rad * 0.55;
+      const face = Math.atan2(cy - y, cx - x);
+      draw(e.h, x, y, e.h.kind === "crawler" ? face : 0, e.h.r);
+    }
+    draw(HEROES[0], cx + Math.sin(t * 1.3) * 18, cy + Math.cos(t * 1.1) * 10, 0, 18);
+    draw(HEROES[1], cx - 70, cy + 52, 0, 18);
+    draw(HEROES[2], cx - 70, cy - 52, 0, 18);
+  };
+
+  // ---------- цикл ----------
+  const visible = new Set();
+  const io = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? visible.add(e.target) : visible.delete(e.target))), { rootMargin: "120px" });
+  tiles.forEach((o) => io.observe(o.cv));
+  const frame = (now) => {
+    frameNo++;
+    const t = reduce ? 1.3 : now / 1000;
+    for (const o of tiles) { if (!visible.has(o.cv) && now > 500) continue; o.scene ? drawScene(o, t) : drawTile(o, t); }
+    if (!reduce) requestAnimationFrame(frame);
+  };
+  // первый кадр рисуем сразу целиком (для превью), дальше — только видимые
+  tiles.forEach((o) => (o.scene ? drawScene(o, 1.3) : drawTile(o, 1.3)));
+  Object.values(KIMG).forEach((im) => im.addEventListener("load", () => tiles.forEach((o) => o.style === "kenney" && (o.scene ? drawScene(o, 1.3) : drawTile(o, 1.3)))));
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
